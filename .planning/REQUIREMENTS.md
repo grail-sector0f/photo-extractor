@@ -1,0 +1,87 @@
+# Requirements: Photo Extractor
+
+**Defined:** 2026-03-19
+**Core Value:** Jennifer can grab any photo she sees while browsing travel sites and have it saved, named, and ready to drop into a tern.travel itinerary without friction.
+
+## v1 Requirements
+
+### Image Extraction
+
+- [ ] **EXTR-01**: Extension extracts all images from standard `img` tags on the active tab
+- [ ] **EXTR-02**: Extension extracts images from CSS `background-image` properties on elements
+- [ ] **EXTR-03**: Extension detects lazy-loaded images as the user scrolls (via MutationObserver)
+- [ ] **EXTR-04**: Extension selects the highest-resolution version when `srcset` provides multiple sizes
+
+### Naming
+
+- [ ] **NAME-01**: User fills in a destination field before downloading (e.g. "bali", "paris")
+- [ ] **NAME-02**: User fills in a property/vendor field before downloading (e.g. "four-seasons", "viator")
+- [ ] **NAME-03**: User selects or types a category before downloading (e.g. "room", "pool", "excursion")
+- [ ] **NAME-04**: User can add an optional notes/tags field for anything else
+- [ ] **NAME-05**: Files are named using the pattern: `destination_vendor_category_notes_index.ext` (e.g. `bali_four-seasons_pool_01.jpg`)
+
+### Selection UI
+
+- [ ] **UI-01**: Extension popup displays extracted images as a visual thumbnail grid
+- [ ] **UI-02**: User can click individual thumbnails to select or deselect them
+- [ ] **UI-03**: User can select all or deselect all images with a single action
+- [ ] **UI-04**: Download button saves only the selected images (not all extracted)
+
+### Storage
+
+- [ ] **STOR-01**: Files are saved to a `travel-photos/` subfolder inside the user's Downloads folder
+- [ ] **STOR-02**: Filename collisions are handled automatically by appending an index (no silent overwrites)
+
+## v2 Requirements
+
+### Right-Click Bypass
+
+- **RCB-01**: Extension overrides JavaScript `contextmenu` event blocks so Jennifer can right-click normally on protected sites
+- **RCB-02**: Extension overrides CSS `pointer-events: none` blocking on image overlays
+
+### UX Improvements
+
+- **UX-01**: Extension remembers the last-used destination, vendor, and category to speed up repeat sessions
+- **UX-02**: Minimum image dimension filter — skip images below a threshold (e.g. smaller than 200x200) to ignore icons and logos
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Safari support | Chrome only for v1 — Safari extension model is different and adds significant complexity |
+| Auto-detect destination/vendor from page | Unreliable across different site structures; manual input keeps naming accurate |
+| Direct tern.travel integration | Local folder + manual import matches Jennifer's existing workflow |
+| Cloud storage / sync | No backend, no accounts — local files only |
+| Format conversion (WebP → JPG) | tern.travel supports WebP natively; adds complexity for no clear gain |
+| Saving to arbitrary folders | Hard Chrome platform constraint — Downloads folder only |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| EXTR-01 | — | Pending |
+| EXTR-02 | — | Pending |
+| EXTR-03 | — | Pending |
+| EXTR-04 | — | Pending |
+| NAME-01 | — | Pending |
+| NAME-02 | — | Pending |
+| NAME-03 | — | Pending |
+| NAME-04 | — | Pending |
+| NAME-05 | — | Pending |
+| UI-01 | — | Pending |
+| UI-02 | — | Pending |
+| UI-03 | — | Pending |
+| UI-04 | — | Pending |
+| STOR-01 | — | Pending |
+| STOR-02 | — | Pending |
+
+**Coverage:**
+- v1 requirements: 15 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 15 ⚠️
+
+---
+*Requirements defined: 2026-03-19*
+*Last updated: 2026-03-19 after initial definition*
