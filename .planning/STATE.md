@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-20T18:31:13.093Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-20T18:54:36.910Z"
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 7
+  completed_plans: 5
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Jennifer can grab any photo she sees while browsing travel sites and have it saved, named, and ready to drop into a tern.travel itinerary without friction.
-**Current focus:** Phase 02 — image-extraction
+**Current focus:** Phase 03 — popup-and-naming
 
 ## Current Position
 
-Phase: 02 (image-extraction) — EXECUTING
-Plan: 2 of 2
+Phase: 03 (popup-and-naming) — EXECUTING
+Plan: 1 of 3
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Plan: 2 of 2
 | Phase 01 P02 | 5min | 2 tasks | 1 files |
 | Phase 02 P01 | 5min | 3 tasks | 7 files |
 | Phase 02-image-extraction P02 | 3 | 3 tasks | 4 files |
+| Phase 03-popup-and-naming P01 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,9 @@ Recent decisions affecting current work:
 - [02-01] extractCssBackgrounds uses getBoundingClientRect as dimension proxy for CSS background elements
 - [Phase 02-02]: defineContentScript global stub added to tests/setup.ts so content.ts loads in jsdom without WXT runtime
 - [Phase 02-02]: handleScanSession and processImg exported from content.ts for direct testing without WXT wrapper
+- [Phase 03-01]: normalizeField collapses consecutive hyphens to prevent double-hyphens from stripped chars adjacent to spaces
+- [Phase 03-01]: deriveExt uses allowlist (jpg/jpeg/png/webp/gif/avif) — unknown extensions fall back to jpg for Tern Travel compatibility
+- [Phase 03-01]: chrome.storage.local mock added to tests/setup.ts with beforeEach resets — defineBackground stub also added
 
 ### Pending Todos
 
@@ -83,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T18:31:13.091Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-popup-and-naming/03-CONTEXT.md
+Last session: 2026-03-20T18:54:36.908Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

@@ -14,11 +14,11 @@
 
 ### Naming
 
-- [ ] **NAME-01**: User fills in a destination field before downloading (e.g. "bali", "paris")
-- [ ] **NAME-02**: User fills in a property/vendor field before downloading (e.g. "four-seasons", "viator")
-- [ ] **NAME-03**: User selects or types a category before downloading (e.g. "room", "pool", "excursion")
-- [ ] **NAME-04**: User can add an optional notes/tags field for anything else
-- [ ] **NAME-05**: Files are named using the pattern: `destination_vendor_category_notes_index.ext` (e.g. `bali_four-seasons_pool_01.jpg`)
+- [x] **NAME-01**: User fills in a destination field before downloading (e.g. "bali", "paris")
+- [x] **NAME-02**: User fills in a property/vendor field before downloading (e.g. "four-seasons", "viator")
+- [x] **NAME-03**: User selects or types a category before downloading (e.g. "room", "pool", "excursion")
+- [x] **NAME-04**: User can add an optional notes/tags field for anything else
+- [x] **NAME-05**: Files are named using the pattern: `destination_vendor_category_notes_index.ext` (e.g. `bali_four-seasons_pool_01.jpg`)
 
 ### Selection UI
 
@@ -65,11 +65,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXTR-02 | Phase 2 | Complete |
 | EXTR-03 | Phase 2 | Complete |
 | EXTR-04 | Phase 2 | Complete |
-| NAME-01 | Phase 3 | Pending |
-| NAME-02 | Phase 3 | Pending |
-| NAME-03 | Phase 3 | Pending |
-| NAME-04 | Phase 3 | Pending |
-| NAME-05 | Phase 3 | Pending |
+| NAME-01 | Phase 3 | Complete |
+| NAME-02 | Phase 3 | Complete |
+| NAME-03 | Phase 3 | Complete |
+| NAME-04 | Phase 3 | Complete |
+| NAME-05 | Phase 3 | Complete |
 | UI-01 | Phase 3 | Pending |
 | UI-02 | Phase 3 | Pending |
 | UI-03 | Phase 3 | Pending |

@@ -74,4 +74,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-20 |
 | 2. Image Extraction | 2/2 | Complete   | 2026-03-20 |
-| 3. Popup and Naming | 0/3 | Not started | - |
+| 3. Popup and Naming | 1/3 | In Progress|  |
