@@ -29,8 +29,8 @@
 
 ### Storage
 
-- [ ] **STOR-01**: Files are saved to a `travel-photos/` subfolder inside the user's Downloads folder
-- [ ] **STOR-02**: Filename collisions are handled automatically by appending an index (no silent overwrites)
+- [x] **STOR-01**: Files are saved to a `travel-photos/` subfolder inside the user's Downloads folder
+- [x] **STOR-02**: Filename collisions are handled automatically by appending an index (no silent overwrites)
 
 ## v2 Requirements
 
@@ -74,8 +74,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UI-02 | Phase 3 | Pending |
 | UI-03 | Phase 3 | Pending |
 | UI-04 | Phase 3 | Pending |
-| STOR-01 | Phase 1 | Pending |
-| STOR-02 | Phase 1 | Pending |
+| STOR-01 | Phase 1 | Complete |
+| STOR-02 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 15 total

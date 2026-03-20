@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Scaffold WXT project, implement download utility with collision-safe naming, set up tests
+- [x] 01-01-PLAN.md — Scaffold WXT project, implement download utility with collision-safe naming, set up tests
 - [ ] 01-02-PLAN.md — Build extension and verify end-to-end download pipeline in Chrome
 
 ### Phase 2: Image Extraction
@@ -63,6 +63,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/2 | Planning complete | - |
+| 1. Foundation | 1/2 | In Progress|  |
 | 2. Image Extraction | 0/TBD | Not started | - |
 | 3. Popup and Naming | 0/TBD | Not started | - |
