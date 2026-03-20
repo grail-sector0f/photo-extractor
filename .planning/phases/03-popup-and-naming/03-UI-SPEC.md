@@ -51,6 +51,8 @@ The popup is a single vertical stack with three regions:
 2. **Thumbnail Grid** — scrollable, 3 columns, fills available height
 3. **Form + Actions** — sticky to bottom, naming fields + Download button
 
+Primary focal point: the thumbnail grid — it is the largest visual region, occupies the majority of the popup height, and is where Jennifer directs attention first to select photos before naming.
+
 ```
 ┌─────────────────────────────────┐
 │ Header (48px fixed)             │
@@ -81,10 +83,10 @@ Declared values (all multiples of 4):
 | xl | 32px | Not used in this phase |
 | 2xl | 48px | Header height |
 | 3xl | 64px | Not used in this phase |
+| input-height | 36px | Form field height (input + vertical padding via `py-2`) |
 
 Exceptions:
 - Thumbnail touch/click target minimum: 44px height (accessibility baseline) — thumbnails are 108px wide x 80px tall so this is naturally satisfied
-- Form fields: 36px height (input + padding) — between sm and md, use `py-2` (8px top+bottom) + `text-sm` line height
 
 ---
 
@@ -92,13 +94,13 @@ Exceptions:
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Body | 13px | 400 | 1.5 | Status messages, helper text, labels |
-| Label | 12px | 500 | 1.4 | Form field labels above inputs |
+| Body | 13px | 400 | 1.5 | Status messages, helper text, labels, form field labels |
 | Heading | 15px | 600 | 1.2 | Popup header title "Photo Extractor" |
 | Badge | 11px | 600 | 1.0 | Image count indicator, selection count |
 
 Notes:
 - 13px body (not 16px) is correct for Chrome extension popups — standard system UI density
+- Form field labels use body weight (400) at 12px size — the smaller size (`text-xs`) is sufficient to distinguish them visually without a separate weight
 - Tailwind classes: `text-xs` = 12px, `text-sm` = 14px — use `text-[13px]` for body and `text-[15px]` for heading
 - No display-size text needed in a popup
 
