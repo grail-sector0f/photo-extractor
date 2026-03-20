@@ -12,7 +12,8 @@ Jennifer can grab any photo she sees while browsing travel sites and have it sav
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Extract images from any webpage, including right-click protected ones — Validated in Phase 02: image-extraction (srcset, img tags, CSS backgrounds)
+- [x] Works as a Chrome browser extension (no terminal required) — Validated in Phase 02: content script port messaging wired
 
 ### Active
 
@@ -54,4 +55,4 @@ Jennifer can grab any photo she sees while browsing travel sites and have it sav
 | Local folder storage (not cloud) | Simpler, no auth required, matches Jennifer's existing tern.travel import workflow | — Pending |
 
 ---
-*Last updated: 2026-03-19 after initialization*
+*Last updated: 2026-03-20 — Phase 02 complete: image extraction layer fully built and tested (62 tests green)*
