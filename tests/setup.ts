@@ -20,6 +20,12 @@ export const chromeMock = {
     onInstalled: { addListener: vi.fn() },
     onMessage: { addListener: vi.fn() },
     sendMessage: vi.fn(),
+    // onConnect fires in the content script when popup opens a long-lived port
+    onConnect: {
+      addListener: vi.fn(),
+    },
+    // connect is called by the popup to open a named port to the content script
+    connect: vi.fn(),
   },
 };
 
@@ -35,3 +41,40 @@ beforeEach(() => {
   chromeMock.storage.session.set.mockResolvedValue(undefined);
   chromeMock.storage.session.get.mockResolvedValue({});
 });
+
+// Factory function to create mock port objects for testing the scan session lifecycle.
+//
+// Chrome's Port objects have onMessage and onDisconnect event emitters.
+// This mock captures listeners added via addListener so tests can fire them
+// programmatically using the _simulateMessage and _simulateDisconnect helpers.
+//
+// Note: _simulateMessage and _simulateDisconnect are test-only helpers — they don't
+// exist on real Chrome Port objects.
+export function createMockPort(name = 'scan-session') {
+  // Arrays to hold listeners registered during the test
+  const messageListeners: Array<(msg: unknown) => void> = [];
+  const disconnectListeners: Array<() => void> = [];
+
+  return {
+    name,
+    // postMessage sends a message over the port; spy on calls to verify content script output
+    postMessage: vi.fn(),
+    onMessage: {
+      // Captures any message listener the content script registers
+      addListener: vi.fn((cb: (msg: unknown) => void) => {
+        messageListeners.push(cb);
+      }),
+    },
+    onDisconnect: {
+      // Captures any disconnect listener the content script registers
+      addListener: vi.fn((cb: () => void) => {
+        disconnectListeners.push(cb);
+      }),
+    },
+    disconnect: vi.fn(),
+    // Test helper: simulate the popup sending a message into the content script
+    _simulateMessage: (msg: unknown) => messageListeners.forEach(cb => cb(msg)),
+    // Test helper: simulate the popup closing (port disconnect)
+    _simulateDisconnect: () => disconnectListeners.forEach(cb => cb()),
+  };
+}
