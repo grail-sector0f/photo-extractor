@@ -61,27 +61,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EXTR-01 | — | Pending |
-| EXTR-02 | — | Pending |
-| EXTR-03 | — | Pending |
-| EXTR-04 | — | Pending |
-| NAME-01 | — | Pending |
-| NAME-02 | — | Pending |
-| NAME-03 | — | Pending |
-| NAME-04 | — | Pending |
-| NAME-05 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| UI-04 | — | Pending |
-| STOR-01 | — | Pending |
-| STOR-02 | — | Pending |
+| EXTR-01 | Phase 2 | Pending |
+| EXTR-02 | Phase 2 | Pending |
+| EXTR-03 | Phase 2 | Pending |
+| EXTR-04 | Phase 2 | Pending |
+| NAME-01 | Phase 3 | Pending |
+| NAME-02 | Phase 3 | Pending |
+| NAME-03 | Phase 3 | Pending |
+| NAME-04 | Phase 3 | Pending |
+| NAME-05 | Phase 3 | Pending |
+| UI-01 | Phase 3 | Pending |
+| UI-02 | Phase 3 | Pending |
+| UI-03 | Phase 3 | Pending |
+| UI-04 | Phase 3 | Pending |
+| STOR-01 | Phase 1 | Pending |
+| STOR-02 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 15 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 15 ⚠️
+- Mapped to phases: 15
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-19 after initial definition*
+*Last updated: 2026-03-19 after roadmap creation — traceability complete*
