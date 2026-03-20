@@ -32,6 +32,13 @@ export const chromeMock = {
 // Assign to global so any module that calls chrome.* picks up the mock
 Object.assign(globalThis, { chrome: chromeMock });
 
+// WXT provides defineContentScript as a global in the browser extension environment,
+// but it doesn't exist in the test environment (jsdom/node). Add a no-op stub so that
+// importing entrypoints/content.ts in tests doesn't throw "defineContentScript is not defined".
+// The stub returns a minimal object that satisfies WXT's internal type without doing anything.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(globalThis as any).defineContentScript = (definition: unknown) => definition;
+
 // Reset all mocks between tests so call counts don't bleed across
 beforeEach(() => {
   vi.clearAllMocks();
