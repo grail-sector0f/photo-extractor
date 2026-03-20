@@ -2,6 +2,7 @@
 // These tests run against mocked Chrome APIs (see tests/setup.ts).
 
 import { buildSafeFilename } from '@/lib/download';
+import { normalizeField, buildBasename, deriveExt } from '@/lib/naming';
 import { chromeMock } from '../setup';
 
 describe('buildSafeFilename', () => {
@@ -83,5 +84,110 @@ describe('buildSafeFilename', () => {
     await expect(
       buildSafeFilename('bali_pool', 'jpg', 'travel-photos')
     ).rejects.toThrow();
+  });
+});
+
+describe('normalizeField', () => {
+  it('lowercases and replaces spaces with hyphens', () => {
+    expect(normalizeField('Bali Beach')).toBe('bali-beach');
+  });
+
+  it('handles multi-word vendor names', () => {
+    expect(normalizeField('Four Seasons')).toBe('four-seasons');
+  });
+
+  it('strips accented characters and ampersand', () => {
+    // accented chars (é, à, etc.) are not in [a-z0-9\-] after lowercasing, so stripped
+    expect(normalizeField('café & résumé')).toBe('caf-rsum');
+  });
+
+  it('strips non-alphanumeric, non-hyphen characters', () => {
+    expect(normalizeField('hello!!!world')).toBe('helloworld');
+  });
+
+  it('trims leading and trailing spaces before normalizing', () => {
+    expect(normalizeField('  spaces  ')).toBe('spaces');
+  });
+
+  it('leaves already-clean slugs unchanged', () => {
+    expect(normalizeField('already-clean')).toBe('already-clean');
+  });
+
+  it('lowercases uppercase input', () => {
+    expect(normalizeField('UPPER')).toBe('upper');
+  });
+
+  it('returns empty string for empty input', () => {
+    expect(normalizeField('')).toBe('');
+  });
+});
+
+describe('buildBasename', () => {
+  it('joins three normalized fields with underscores', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool')).toBe('bali_four-seasons_pool');
+  });
+
+  it('normalizes each field before joining', () => {
+    expect(buildBasename('Bali', 'Four Seasons', 'Pool')).toBe('bali_four-seasons_pool');
+  });
+
+  it('includes notes segment when notes is non-empty', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', 'sunset view')).toBe(
+      'bali_four-seasons_pool_sunset-view'
+    );
+  });
+
+  it('omits notes segment when notes is empty string', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', '')).toBe('bali_four-seasons_pool');
+  });
+
+  it('omits notes segment when notes is whitespace-only', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', '   ')).toBe('bali_four-seasons_pool');
+  });
+
+  it('omits notes segment when notes is undefined', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', undefined)).toBe('bali_four-seasons_pool');
+  });
+});
+
+describe('deriveExt', () => {
+  it('extracts jpg from a simple URL', () => {
+    expect(deriveExt('https://example.com/photo.jpg')).toBe('jpg');
+  });
+
+  it('ignores query string when extracting extension', () => {
+    expect(deriveExt('https://example.com/photo.jpg?w=800')).toBe('jpg');
+  });
+
+  it('lowercases uppercase extensions', () => {
+    expect(deriveExt('https://example.com/photo.PNG')).toBe('png');
+  });
+
+  it('extracts webp extension', () => {
+    expect(deriveExt('https://example.com/photo.webp')).toBe('webp');
+  });
+
+  it('falls back to jpg for extensionless CDN URLs', () => {
+    expect(deriveExt('https://cdn.example.com/image/upload/v123/photo')).toBe('jpg');
+  });
+
+  it('falls back to jpg for unknown extensions like bmp', () => {
+    expect(deriveExt('https://example.com/photo.bmp')).toBe('jpg');
+  });
+
+  it('falls back to jpg when URL parsing fails', () => {
+    expect(deriveExt('not-a-url')).toBe('jpg');
+  });
+
+  it('extracts avif extension', () => {
+    expect(deriveExt('https://example.com/image.avif')).toBe('avif');
+  });
+
+  it('extracts gif extension', () => {
+    expect(deriveExt('https://example.com/image.gif')).toBe('gif');
+  });
+
+  it('extracts jpeg extension', () => {
+    expect(deriveExt('https://example.com/image.jpeg')).toBe('jpeg');
   });
 });
