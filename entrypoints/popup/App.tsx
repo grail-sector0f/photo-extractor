@@ -6,8 +6,13 @@ import { useState } from 'react';
 
 export default function App() {
   const [status, setStatus] = useState('');
+  // Track how many downloads have been triggered so the user can confirm
+  // each click produces a new file (collision-safe naming check).
+  const [clickCount, setClickCount] = useState(0);
 
   const handleTestDownload = () => {
+    const nextCount = clickCount + 1;
+    setClickCount(nextCount);
     setStatus('Downloading...');
 
     // Send a DOWNLOAD_FILE message to the background service worker.
@@ -27,7 +32,8 @@ export default function App() {
           return;
         }
         if (response?.ok) {
-          setStatus('Saved!');
+          // Show download ID alongside success so each click is visibly distinct
+          setStatus(`Saved! (ID: ${response.downloadId})`);
         } else {
           setStatus(`Failed: ${response?.error ?? 'unknown error'}`);
         }
@@ -44,7 +50,8 @@ export default function App() {
         onClick={handleTestDownload}
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
       >
-        Test Download
+        {/* Show click count after first download so user can confirm each triggers a new file */}
+        {clickCount > 0 ? `Test Download (${clickCount})` : 'Test Download'}
       </button>
 
       {/* Show download status below the button */}
