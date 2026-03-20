@@ -10,6 +10,18 @@
 import { parseSrcset } from './srcsetParser';
 import type { ImageResult } from './types';
 
+// Resolve a potentially relative URL to absolute using the page's base URI.
+// img.src (DOM property) does this automatically, but raw data-* attributes don't.
+// Returns empty string if the input is empty or resolution fails.
+function resolveUrl(raw: string): string {
+  if (!raw) return '';
+  try {
+    return new URL(raw, document.baseURI).href;
+  } catch {
+    return raw;
+  }
+}
+
 // Minimum dimension (in pixels) for both width and height.
 // Images smaller than this in either dimension are skipped — they're likely
 // icons, thumbnails, or UI decorations rather than real travel photos.
@@ -22,9 +34,9 @@ export function extractImgTags(): ImageResult[] {
 
   document.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
     // --- SVG filter ---
-    // SVG files are vector graphics, not photos; skip them entirely.
-    const src = img.getAttribute('src') ?? '';
-    if (src.endsWith('.svg') || img.getAttribute('type') === 'image/svg+xml') {
+    // Check the raw attribute for .svg suffix before paying the cost of URL resolution.
+    const rawSrc = img.getAttribute('src') ?? '';
+    if (rawSrc.endsWith('.svg') || img.getAttribute('type') === 'image/svg+xml') {
       return;
     }
 
@@ -41,10 +53,38 @@ export function extractImgTags(): ImageResult[] {
     }
 
     // --- URL resolution ---
-    // If srcset is present, parse it to find the highest-resolution candidate.
-    // Fall back to src if srcset is absent or produces no valid URL.
+    // Many sites (booking.com, airbnb, etc.) use lazy loading: the real URL lives in
+    // a data attribute and src is empty or a tiny placeholder until the image scrolls
+    // into view. We check data-srcset / data-src as fallbacks before giving up.
+    //
+    // Priority order:
+    //   1. srcset (highest-res from the spec-compliant attribute)
+    //   2. data-srcset (lazy-load srcset, same format)
+    //   3. src (already loaded or native lazy with src set)
+    //   4. data-src / data-lazy / data-lazy-src (single-URL lazy-load attributes)
     const srcsetAttr = img.getAttribute('srcset') ?? '';
-    const url = (srcsetAttr ? (parseSrcset(srcsetAttr) ?? src) : src);
+    const dataSrcsetAttr = img.getAttribute('data-srcset') ?? '';
+    const rawDataSrc =
+      img.getAttribute('data-src') ??
+      img.getAttribute('data-lazy') ??
+      img.getAttribute('data-lazy-src') ??
+      '';
+
+    // img.src (DOM property) is always an absolute URL — the browser resolves it
+    // against the page's base URI automatically. Raw data-* attributes are not
+    // resolved by the browser, so we do it manually via resolveUrl().
+    const resolvedSrc = img.src; // already absolute
+    const resolvedDataSrc = resolveUrl(rawDataSrc);
+
+    // parseSrcset returns a raw URL string from the attribute — also needs resolution
+    const resolvedSrcset = srcsetAttr ? resolveUrl(parseSrcset(srcsetAttr) ?? '') : '';
+    const resolvedDataSrcset = dataSrcsetAttr ? resolveUrl(parseSrcset(dataSrcsetAttr) ?? '') : '';
+
+    const url =
+      resolvedSrcset ||
+      resolvedDataSrcset ||
+      resolvedSrc ||
+      resolvedDataSrc;
 
     // --- Blob URL filter ---
     // Blob URLs are temporary object references that can't be downloaded directly.

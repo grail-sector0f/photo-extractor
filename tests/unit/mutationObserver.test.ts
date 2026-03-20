@@ -135,8 +135,8 @@ describe('processImg', () => {
   it('resolves srcset w-descriptors and returns the highest-width URL (real parseSrcset)', () => {
     // parseSrcset is NOT mocked — this exercises the real integration path through processImg
     const img = createImg({
-      src: 'small.jpg',
-      srcset: 'small.jpg 320w, large.jpg 1600w',
+      src: 'https://example.com/small.jpg',
+      srcset: 'https://example.com/small.jpg 320w, https://example.com/large.jpg 1600w',
       naturalWidth: 400,
       naturalHeight: 300,
     });
@@ -145,13 +145,13 @@ describe('processImg', () => {
 
     expect(result).not.toBeNull();
     // parseSrcset should select large.jpg (1600w > 320w)
-    expect(result?.url).toBe('large.jpg');
+    expect(result?.url).toBe('https://example.com/large.jpg');
   });
 
   it('resolves srcset x-descriptors and returns the highest-density URL (real parseSrcset)', () => {
     const img = createImg({
-      src: 'low.jpg',
-      srcset: 'low.jpg 1x, high.jpg 2x',
+      src: 'https://example.com/low.jpg',
+      srcset: 'https://example.com/low.jpg 1x, https://example.com/high.jpg 2x',
       naturalWidth: 400,
       naturalHeight: 300,
     });
@@ -160,7 +160,7 @@ describe('processImg', () => {
 
     expect(result).not.toBeNull();
     // parseSrcset should select high.jpg (2x > 1x)
-    expect(result?.url).toBe('high.jpg');
+    expect(result?.url).toBe('https://example.com/high.jpg');
   });
 
   it('returns null for a URL already in seenUrls (deduplication)', () => {
@@ -217,8 +217,8 @@ describe('handleScanSession + MutationObserver', () => {
     port._simulateMessage({ type: 'SCAN_PAGE' });
 
     const img = createImg({
-      src: 'thumb.jpg',
-      srcset: 'thumb.jpg 200w, full.jpg 1200w',
+      src: 'https://example.com/thumb.jpg',
+      srcset: 'https://example.com/thumb.jpg 200w, https://example.com/full.jpg 1200w',
       naturalWidth: 400,
       naturalHeight: 300,
       complete: true,
@@ -234,7 +234,7 @@ describe('handleScanSession + MutationObserver', () => {
     // parseSrcset should select full.jpg (1200w > 200w)
     expect(imageFoundCalls[0][0]).toMatchObject({
       type: 'IMAGE_FOUND',
-      payload: expect.objectContaining({ url: 'full.jpg' }),
+      payload: expect.objectContaining({ url: 'https://example.com/full.jpg' }),
     });
   });
 

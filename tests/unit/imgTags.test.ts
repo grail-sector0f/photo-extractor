@@ -50,12 +50,12 @@ describe('extractImgTags', () => {
   });
 
   it('includes a large image and returns its URL, dimensions, and sourceType', () => {
-    addImg({ src: 'photo.jpg', naturalWidth: 800, naturalHeight: 600 });
+    addImg({ src: 'https://example.com/photo.jpg', naturalWidth: 800, naturalHeight: 600 });
 
     const results = extractImgTags();
 
     expect(results).toHaveLength(1);
-    expect(results[0].url).toBe('photo.jpg');
+    expect(results[0].url).toBe('https://example.com/photo.jpg');
     expect(results[0].sourceType).toBe('img');
     expect(results[0].naturalWidth).toBe(800);
     expect(results[0].naturalHeight).toBe(600);
@@ -102,8 +102,8 @@ describe('extractImgTags', () => {
 
   it('uses parseSrcset to return the highest-resolution URL when srcset is present', () => {
     addImg({
-      src: 'small.jpg',
-      srcset: 'small.jpg 320w, large.jpg 1600w',
+      src: 'https://example.com/small.jpg',
+      srcset: 'https://example.com/small.jpg 320w, https://example.com/large.jpg 1600w',
       naturalWidth: 800,
       naturalHeight: 600,
     });
@@ -111,42 +111,42 @@ describe('extractImgTags', () => {
     const results = extractImgTags();
 
     expect(results).toHaveLength(1);
-    // parseSrcset should pick "large.jpg" (1600w > 320w)
-    expect(results[0].url).toBe('large.jpg');
+    // parseSrcset should pick large.jpg (1600w > 320w)
+    expect(results[0].url).toBe('https://example.com/large.jpg');
   });
 
   it('uses img.width/img.height as fallback when img.complete is false', () => {
-    addImg({ src: 'photo.jpg', width: 400, height: 300, complete: false });
+    addImg({ src: 'https://example.com/photo.jpg', width: 400, height: 300, complete: false });
 
     const results = extractImgTags();
 
     expect(results).toHaveLength(1);
-    expect(results[0].url).toBe('photo.jpg');
+    expect(results[0].url).toBe('https://example.com/photo.jpg');
     // Fallback dimensions from .width/.height
     expect(results[0].naturalWidth).toBe(400);
     expect(results[0].naturalHeight).toBe(300);
   });
 
   it('deduplicates when multiple img elements share the same URL', () => {
-    addImg({ src: 'photo.jpg', naturalWidth: 800, naturalHeight: 600 });
-    addImg({ src: 'photo.jpg', naturalWidth: 800, naturalHeight: 600 });
+    addImg({ src: 'https://example.com/photo.jpg', naturalWidth: 800, naturalHeight: 600 });
+    addImg({ src: 'https://example.com/photo.jpg', naturalWidth: 800, naturalHeight: 600 });
 
     const results = extractImgTags();
 
     expect(results).toHaveLength(1);
-    expect(results[0].url).toBe('photo.jpg');
+    expect(results[0].url).toBe('https://example.com/photo.jpg');
   });
 
   it('returns multiple distinct images from a page with several img tags', () => {
-    addImg({ src: 'first.jpg', naturalWidth: 800, naturalHeight: 600 });
-    addImg({ src: 'second.jpg', naturalWidth: 1200, naturalHeight: 900 });
+    addImg({ src: 'https://example.com/first.jpg', naturalWidth: 800, naturalHeight: 600 });
+    addImg({ src: 'https://example.com/second.jpg', naturalWidth: 1200, naturalHeight: 900 });
 
     const results = extractImgTags();
 
     expect(results).toHaveLength(2);
     const urls = results.map((r) => r.url);
-    expect(urls).toContain('first.jpg');
-    expect(urls).toContain('second.jpg');
+    expect(urls).toContain('https://example.com/first.jpg');
+    expect(urls).toContain('https://example.com/second.jpg');
   });
 
   it('excludes an image where exactly one dimension is below 100px', () => {

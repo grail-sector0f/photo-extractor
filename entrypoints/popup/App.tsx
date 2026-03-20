@@ -87,7 +87,20 @@ export const initialState: PopupState = {
 export function popupReducer(state: PopupState, action: Action): PopupState {
   switch (action.type) {
     case 'SCAN_STARTED':
-      return { ...state, scanStatus: 'scanning' };
+      // Clear previous scan results so stale images/selection don't persist
+      // into the new scan. Form fields (destination/vendor/category/notes) are
+      // intentionally preserved — the user expects those to carry over.
+      return {
+        ...state,
+        scanStatus: 'scanning',
+        images: [],
+        blobCount: 0,
+        selected: new Set(),
+        downloadStatus: 'idle',
+        downloadProgress: { done: 0, total: 0 },
+        downloadSaved: 0,
+        downloadFailed: 0,
+      };
 
     case 'SCAN_RESULT': {
       const { images, blobCount } = action.payload;
@@ -202,21 +215,42 @@ function sendDownloadMessage(url: string, basename: string, ext: string): Promis
 /**
  * Connect a long-lived port to the content script and request a page scan.
  *
- * Returns a cleanup function that clears the timeout and disconnects the port.
- * The caller (Scan Page button handler) should invoke cleanup when the component
- * unmounts or when a fresh scan is started.
+ * Uses chrome.tabs.connect(tabId) — NOT chrome.runtime.connect(). The distinction
+ * matters: chrome.runtime.connect() opens a port to the background service worker,
+ * while chrome.tabs.connect(tabId) opens a port to the content script running in
+ * a specific tab. The content script's chrome.runtime.onConnect fires only for the latter.
  */
-function startScan(dispatch: React.Dispatch<Action>): () => void {
+async function startScan(dispatch: React.Dispatch<Action>): Promise<void> {
   dispatch({ type: 'SCAN_STARTED' });
 
-  const port = chrome.runtime.connect({ name: 'scan-session' });
+  // Query the tab this popup is attached to. currentWindow: true is required because
+  // the popup is always opened from the active window's toolbar.
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
 
-  // Listen for scan results streaming back from the content script
+  if (!tab?.id) {
+    // No active tab (e.g., popup opened from chrome://extensions). Show timeout.
+    dispatch({ type: 'SCAN_TIMEOUT' });
+    return;
+  }
+
+  let port: chrome.runtime.Port;
+  try {
+    // Open port directly to the content script in this tab.
+    // Will throw if the content script isn't injected (e.g., chrome:// page,
+    // or the tab was open when the extension was first installed/reloaded).
+    port = chrome.tabs.connect(tab.id, { name: 'scan-session' });
+  } catch {
+    dispatch({ type: 'SCAN_TIMEOUT' });
+    return;
+  }
+
+  const timer = setTimeout(() => dispatch({ type: 'SCAN_TIMEOUT' }), 5000);
+
   port.onMessage.addListener((msg: { type: string; payload: unknown }) => {
     if (msg.type === 'SCAN_RESULT') {
       const { images, blobCount } = msg.payload as { images: ImageResult[]; blobCount: number };
       dispatch({ type: 'SCAN_RESULT', payload: { images, blobCount } });
-      // Clear the timeout once we receive results
       clearTimeout(timer);
     }
     if (msg.type === 'IMAGE_FOUND') {
@@ -224,16 +258,13 @@ function startScan(dispatch: React.Dispatch<Action>): () => void {
     }
   });
 
-  // Ask the content script to scan the page
-  port.postMessage({ type: 'SCAN_PAGE' });
-
-  // 5-second timeout: if content script doesn't respond, show empty/timeout state
-  const timer = setTimeout(() => dispatch({ type: 'SCAN_TIMEOUT' }), 5000);
-
-  return () => {
+  // If the port disconnects before SCAN_RESULT arrives (e.g., content script crashed
+  // or the tab navigated away), cancel the timer to avoid a stale SCAN_TIMEOUT dispatch.
+  port.onDisconnect.addListener(() => {
     clearTimeout(timer);
-    port.disconnect();
-  };
+  });
+
+  port.postMessage({ type: 'SCAN_PAGE' });
 }
 
 /**
@@ -254,10 +285,25 @@ async function runDownloads(
   dispatch({ type: 'DOWNLOAD_STARTED', total: selectedUrls.length });
   let done = 0;
 
+  // Assign numbered basenames before any downloads start to avoid a race condition.
+  // If all downloads run in parallel and each calls buildSafeFilename independently,
+  // they all see the same Chrome download history (empty, because nothing has finished
+  // yet) and all claim the same filename. With conflictAction:'overwrite' each download
+  // then silently overwrites the previous one, leaving a single file at the end.
+  //
+  // Pre-numbering guarantees uniqueness without touching history:
+  //   1 file  → "bali_villa_pool.jpg"       (no suffix — clean single-file download)
+  //   N files → "bali_villa_pool_01.jpg", "bali_villa_pool_02.jpg", ...
+  const numberedBasenames = selectedUrls.map((_, i) =>
+    selectedUrls.length === 1
+      ? basename
+      : `${basename}_${String(i + 1).padStart(2, '0')}`,
+  );
+
   const results = await Promise.allSettled(
-    selectedUrls.map(async (url) => {
+    selectedUrls.map(async (url, i) => {
       const ext = deriveExt(url);
-      await sendDownloadMessage(url, basename, ext);
+      await sendDownloadMessage(url, numberedBasenames[i], ext);
       // Increment progress count after each successful download
       dispatch({ type: 'DOWNLOAD_PROGRESS', done: ++done });
     }),

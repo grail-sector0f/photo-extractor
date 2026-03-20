@@ -51,15 +51,35 @@ export function processImg(img: HTMLImageElement, seenUrls: Set<string>): ImageR
   }
 
   // --- SVG filter ---
-  const src = img.getAttribute('src') ?? '';
-  if (src.endsWith('.svg') || img.getAttribute('type') === 'image/svg+xml') {
+  const rawSrc = img.getAttribute('src') ?? '';
+  if (rawSrc.endsWith('.svg') || img.getAttribute('type') === 'image/svg+xml') {
     return null;
   }
 
   // --- URL resolution ---
-  // Parse srcset for highest-resolution candidate; fall back to src
+  // img.src (DOM property) is always absolute; raw data-* attributes need manual
+  // resolution via new URL(raw, document.baseURI) so they work in the popup context.
   const srcsetAttr = img.getAttribute('srcset') ?? '';
-  const url = srcsetAttr ? (parseSrcset(srcsetAttr) ?? src) : src;
+  const dataSrcsetAttr = img.getAttribute('data-srcset') ?? '';
+  const rawDataSrc =
+    img.getAttribute('data-src') ??
+    img.getAttribute('data-lazy') ??
+    img.getAttribute('data-lazy-src') ??
+    '';
+
+  const resolveUrl = (raw: string) => {
+    if (!raw) return '';
+    try { return new URL(raw, document.baseURI).href; } catch { return raw; }
+  };
+
+  const resolvedSrcset = srcsetAttr ? resolveUrl(parseSrcset(srcsetAttr) ?? '') : '';
+  const resolvedDataSrcset = dataSrcsetAttr ? resolveUrl(parseSrcset(dataSrcsetAttr) ?? '') : '';
+
+  const url =
+    resolvedSrcset ||
+    resolvedDataSrcset ||
+    img.src ||
+    resolveUrl(rawDataSrc);
 
   // --- Blob URL filter ---
   // Blob URLs are temporary and can't be downloaded directly.
@@ -194,7 +214,9 @@ export function handleScanSession(port: chrome.runtime.Port): void {
       attributes: true,
       // Only fire on src/srcset changes — without this, every class/aria/data change
       // fires the callback, causing very high CPU on busy pages (RESEARCH.md Pitfall 2)
-      attributeFilter: ['src', 'srcset'],
+      // Also watch data-src / data-srcset / data-lazy — lazy loaders often set
+      // these before (or instead of) updating src directly.
+      attributeFilter: ['src', 'srcset', 'data-src', 'data-srcset', 'data-lazy', 'data-lazy-src'],
     });
   });
 
