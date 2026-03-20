@@ -2,15 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 2 of 2
-status: unknown
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-20T05:16:24.072Z"
+status: executing
+stopped_at: "Completed 02-01-PLAN.md"
+last_updated: "2026-03-20T17:34:00Z"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 4
+  completed_plans: 3
 ---
 
 # Project State
@@ -20,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Jennifer can grab any photo she sees while browsing travel sites and have it saved, named, and ready to drop into a tern.travel itinerary without friction.
-**Current focus:** Phase 01 — foundation
+**Current focus:** Phase 02 — image-extraction
 
 ## Current Position
 
-Phase: 01 (foundation) — EXECUTING
-Current Plan: 2 of 2
+Phase: 02 (image-extraction) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -48,6 +47,7 @@ Current Plan: 2 of 2
 
 *Updated after each plan completion*
 | Phase 01 P02 | 5min | 2 tasks | 1 files |
+| Phase 02 P01 | 5min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -63,6 +63,10 @@ Recent decisions affecting current work:
 - [01-01] Collision avoidance via chrome.downloads.search history check, not conflictAction: uniquify — preserves _01/_02 naming format required by NAME-05
 - [01-01] SW keepalive pattern: write _lastActive to chrome.storage.session before every async download operation
 - [Phase 01-02]: Popup shows download ID and click count in status message — confirms each click reaches background worker with a real download response
+- [02-01] jsdom installed as dev dep — vitest 3.x requires it at startup even for non-jsdom test files
+- [02-01] parseSrcset prefers w-descriptors over x-descriptors when both appear in same srcset string
+- [02-01] extractImgTags falls back to img.width/height when img.complete is false
+- [02-01] extractCssBackgrounds uses getBoundingClientRect as dimension proxy for CSS background elements
 
 ### Pending Todos
 
@@ -76,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T05:16:24.069Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-image-extraction/02-CONTEXT.md
+Last session: 2026-03-20T17:34:00Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: .planning/phases/02-image-extraction/02-02-PLAN.md

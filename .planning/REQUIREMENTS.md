@@ -7,10 +7,10 @@
 
 ### Image Extraction
 
-- [ ] **EXTR-01**: Extension extracts all images from standard `img` tags on the active tab
-- [ ] **EXTR-02**: Extension extracts images from CSS `background-image` properties on elements
+- [x] **EXTR-01**: Extension extracts all images from standard `img` tags on the active tab
+- [x] **EXTR-02**: Extension extracts images from CSS `background-image` properties on elements
 - [ ] **EXTR-03**: Extension detects lazy-loaded images as the user scrolls (via MutationObserver)
-- [ ] **EXTR-04**: Extension selects the highest-resolution version when `srcset` provides multiple sizes
+- [x] **EXTR-04**: Extension selects the highest-resolution version when `srcset` provides multiple sizes
 
 ### Naming
 
@@ -61,10 +61,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EXTR-01 | Phase 2 | Pending |
-| EXTR-02 | Phase 2 | Pending |
+| EXTR-01 | Phase 2 | Complete |
+| EXTR-02 | Phase 2 | Complete |
 | EXTR-03 | Phase 2 | Pending |
-| EXTR-04 | Phase 2 | Pending |
+| EXTR-04 | Phase 2 | Complete |
 | NAME-01 | Phase 3 | Pending |
 | NAME-02 | Phase 3 | Pending |
 | NAME-03 | Phase 3 | Pending |
