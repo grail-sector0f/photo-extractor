@@ -27,7 +27,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. A test download saves a file to `Downloads/travel-photos/` with the correct subfolder path
   3. Two files with the same base name save as separate files — no silent overwrite
   4. Service worker stays functional after 30+ seconds of idle (state survives in chrome.storage, not memory)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Scaffold WXT project, implement download utility with collision-safe naming, set up tests
+- [ ] 01-02-PLAN.md — Build extension and verify end-to-end download pipeline in Chrome
 
 ### Phase 2: Image Extraction
 **Goal**: A content script that finds all meaningful images on any travel site page — including lazy-loaded, CSS background, and srcset images — and surfaces them to the extension
@@ -59,6 +63,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/2 | Planning complete | - |
 | 2. Image Extraction | 0/TBD | Not started | - |
 | 3. Popup and Naming | 0/TBD | Not started | - |
