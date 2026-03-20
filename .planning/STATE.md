@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: "Completed 02-01-PLAN.md"
-last_updated: "2026-03-20T17:34:00Z"
+status: unknown
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-20T17:41:15.476Z"
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -48,6 +48,7 @@ Plan: 2 of 2
 *Updated after each plan completion*
 | Phase 01 P02 | 5min | 2 tasks | 1 files |
 | Phase 02 P01 | 5min | 3 tasks | 7 files |
+| Phase 02-image-extraction P02 | 3 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - [02-01] parseSrcset prefers w-descriptors over x-descriptors when both appear in same srcset string
 - [02-01] extractImgTags falls back to img.width/height when img.complete is false
 - [02-01] extractCssBackgrounds uses getBoundingClientRect as dimension proxy for CSS background elements
+- [Phase 02-02]: defineContentScript global stub added to tests/setup.ts so content.ts loads in jsdom without WXT runtime
+- [Phase 02-02]: handleScanSession and processImg exported from content.ts for direct testing without WXT wrapper
 
 ### Pending Todos
 
@@ -80,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T17:34:00Z
-Stopped at: Completed 02-01-PLAN.md
-Resume file: .planning/phases/02-image-extraction/02-02-PLAN.md
+Last session: 2026-03-20T17:41:15.475Z
+Stopped at: Completed 02-02-PLAN.md
+Resume file: None

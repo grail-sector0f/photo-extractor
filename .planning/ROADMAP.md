@@ -13,7 +13,7 @@ Three phases that build the extension bottom-up: scaffold and storage first (the
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - MV3-compliant scaffold with service worker, permissions, and file-saving pipeline (completed 2026-03-20)
-- [ ] **Phase 2: Image Extraction** - Content script that reliably finds all images on real travel sites
+- [x] **Phase 2: Image Extraction** - Content script that reliably finds all images on real travel sites (completed 2026-03-20)
 - [ ] **Phase 3: Popup and Naming** - Full popup UI with image grid, naming form, and end-to-end download
 
 ## Phase Details
@@ -68,5 +68,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-20 |
-| 2. Image Extraction | 1/2 | In Progress|  |
+| 2. Image Extraction | 2/2 | Complete   | 2026-03-20 |
 | 3. Popup and Naming | 0/TBD | Not started | - |
