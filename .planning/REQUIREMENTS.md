@@ -22,10 +22,10 @@
 
 ### Selection UI
 
-- [ ] **UI-01**: Extension popup displays extracted images as a visual thumbnail grid
-- [ ] **UI-02**: User can click individual thumbnails to select or deselect them
-- [ ] **UI-03**: User can select all or deselect all images with a single action
-- [ ] **UI-04**: Download button saves only the selected images (not all extracted)
+- [x] **UI-01**: Extension popup displays extracted images as a visual thumbnail grid
+- [x] **UI-02**: User can click individual thumbnails to select or deselect them
+- [x] **UI-03**: User can select all or deselect all images with a single action
+- [x] **UI-04**: Download button saves only the selected images (not all extracted)
 
 ### Storage
 
@@ -70,10 +70,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NAME-03 | Phase 3 | Complete |
 | NAME-04 | Phase 3 | Complete |
 | NAME-05 | Phase 3 | Complete |
-| UI-01 | Phase 3 | Pending |
-| UI-02 | Phase 3 | Pending |
-| UI-03 | Phase 3 | Pending |
-| UI-04 | Phase 3 | Pending |
+| UI-01 | Phase 3 | Complete |
+| UI-02 | Phase 3 | Complete |
+| UI-03 | Phase 3 | Complete |
+| UI-04 | Phase 3 | Complete |
 | STOR-01 | Phase 1 | Complete |
 | STOR-02 | Phase 1 | Complete |
 

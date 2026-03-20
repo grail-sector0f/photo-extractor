@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-20T18:54:36.910Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-20T19:00:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 ## Current Position
 
 Phase: 03 (popup-and-naming) — EXECUTING
-Plan: 1 of 3
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Plan: 1 of 3
 | Phase 02 P01 | 5min | 3 tasks | 7 files |
 | Phase 02-image-extraction P02 | 3 | 3 tasks | 4 files |
 | Phase 03-popup-and-naming P01 | 2 | 2 tasks | 3 files |
+| Phase 03-popup-and-naming P02 | 5 | 1 task | 2 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 03-01]: normalizeField collapses consecutive hyphens to prevent double-hyphens from stripped chars adjacent to spaces
 - [Phase 03-01]: deriveExt uses allowlist (jpg/jpeg/png/webp/gif/avif) — unknown extensions fall back to jpg for Tern Travel compatibility
 - [Phase 03-01]: chrome.storage.local mock added to tests/setup.ts with beforeEach resets — defineBackground stub also added
+- [Phase 03-02]: Bottom section (selection bar + form + download) only shown when scanStatus=done AND images.length > 0
+- [Phase 03-02]: runDownloads only persists to chrome.storage.local when at least 1 download succeeded
+- [Phase 03-02]: export reducer + initialState as named exports for direct unit testing without React rendering
 
 ### Pending Todos
 
@@ -87,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T18:54:36.908Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-20T19:00:00.000Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
