@@ -58,7 +58,12 @@ Plans:
   3. Filling in destination, vendor, and category fields and clicking Download saves only the selected files — no unselected images download
   4. Downloaded files are named `destination_vendor_category_[notes_]index.ext` matching the values Jennifer typed
   5. Reopening the popup on a new page pre-fills the last-used destination, vendor, and category values
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Create naming utility (normalizeField, buildBasename, deriveExt) with tests and update test setup mocks
+- [ ] 03-02-PLAN.md — Build complete popup UI with thumbnail grid, selection, naming form, scan wiring, and download pipeline
+- [ ] 03-03-PLAN.md — Build extension and verify end-to-end in Chrome
 
 ## Progress
 
@@ -69,4 +74,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-20 |
 | 2. Image Extraction | 2/2 | Complete   | 2026-03-20 |
-| 3. Popup and Naming | 0/TBD | Not started | - |
+| 3. Popup and Naming | 0/3 | Not started | - |
