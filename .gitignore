@@ -1,0 +1,17 @@
+# WXT build output — generated, never committed
+.output/
+
+# Node.js dependencies
+node_modules/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# WXT type generation
+.wxt/
+
+# OS files
+.DS_Store
+
+# Editor
+.vscode/settings.json

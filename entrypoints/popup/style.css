@@ -1,0 +1,7 @@
+/* Import Tailwind's base reset, component layer, and utility classes.
+   These are processed by PostCSS + Tailwind during the WXT build.
+   Any Tailwind class used in .tsx files within entrypoints/ will be included
+   (and unused classes will be stripped) based on tailwind.config.js content paths. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
