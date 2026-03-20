@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - MV3-compliant scaffold with service worker, permissions, and file-saving pipeline (completed 2026-03-20)
 - [x] **Phase 2: Image Extraction** - Content script that reliably finds all images on real travel sites (completed 2026-03-20)
-- [ ] **Phase 3: Popup and Naming** - Full popup UI with image grid, naming form, and end-to-end download
+- [x] **Phase 3: Popup and Naming** - Full popup UI with image grid, naming form, and end-to-end download (completed 2026-03-20)
 
 ## Phase Details
 
@@ -61,9 +61,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Create naming utility (normalizeField, buildBasename, deriveExt) with tests and update test setup mocks
-- [ ] 03-02-PLAN.md — Build complete popup UI with thumbnail grid, selection, naming form, scan wiring, and download pipeline
-- [ ] 03-03-PLAN.md — Build extension and verify end-to-end in Chrome
+- [x] 03-01-PLAN.md — Create naming utility (normalizeField, buildBasename, deriveExt) with tests and update test setup mocks
+- [x] 03-02-PLAN.md — Build complete popup UI with thumbnail grid, selection, naming form, scan wiring, and download pipeline
+- [x] 03-03-PLAN.md — Build extension and verify end-to-end in Chrome
 
 ## Progress
 
@@ -74,4 +74,14 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-20 |
 | 2. Image Extraction | 2/2 | Complete   | 2026-03-20 |
-| 3. Popup and Naming | 2/3 | In Progress|  |
+| 3. Popup and Naming | 3/3 | Complete   | 2026-03-20 |
+
+### Phase 4: CDN URL upscaling — detect CDN image URL patterns (booking.com, Airbnb/Cloudinary, etc.) and rewrite URLs to request the highest available resolution before downloading
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 3
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 4 to break down)

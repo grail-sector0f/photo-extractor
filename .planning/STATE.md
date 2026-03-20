@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-20T19:00:00.000Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-03-20T23:30:00.000Z"
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 
 ## Current Position
 
-Phase: 03 (popup-and-naming) — EXECUTING
-Plan: 2 of 3
+Phase: 03 (popup-and-naming) — COMPLETE
+Plan: 3 of 3 (all plans complete)
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Plan: 2 of 3
 | Phase 02-image-extraction P02 | 3 | 3 tasks | 4 files |
 | Phase 03-popup-and-naming P01 | 2 | 2 tasks | 3 files |
 | Phase 03-popup-and-naming P02 | 5 | 1 task | 2 files |
+| Phase 03-popup-and-naming P03 | 45 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,14 @@ Recent decisions affecting current work:
 - [Phase 03-02]: Bottom section (selection bar + form + download) only shown when scanStatus=done AND images.length > 0
 - [Phase 03-02]: runDownloads only persists to chrome.storage.local when at least 1 download succeeded
 - [Phase 03-02]: export reducer + initialState as named exports for direct unit testing without React rendering
+- [Phase 03-03]: chrome.tabs.connect(tabId) required — chrome.runtime.connect() only reaches background, not content script
+- [Phase 03-03]: Pre-number all basenames before Promise.allSettled to prevent parallel download race condition
+- [Phase 03-03]: Lazy-load fallback order: srcset > data-srcset > img.src > data-src/data-lazy — covers booking.com and Next.js sites
+- [Phase 03-03]: Use img.src (DOM property, absolute) not getAttribute('src') (raw, may be relative)
+
+### Roadmap Evolution
+
+- Phase 4 added: CDN URL upscaling — detect CDN image URL patterns (booking.com, Airbnb/Cloudinary, etc.) and rewrite URLs to request the highest available resolution before downloading
 
 ### Pending Todos
 
@@ -91,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T19:00:00.000Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-03-20T23:30:00.000Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
