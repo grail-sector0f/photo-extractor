@@ -15,6 +15,11 @@ export const chromeMock = {
       set: vi.fn().mockResolvedValue(undefined),
       get: vi.fn().mockResolvedValue({}),
     },
+    // local is used by Phase 3 popup to persist last-used form field values (destination, vendor, category)
+    local: {
+      get: vi.fn().mockResolvedValue({}),
+      set: vi.fn().mockResolvedValue(undefined),
+    },
   },
   runtime: {
     onInstalled: { addListener: vi.fn() },
@@ -39,6 +44,11 @@ Object.assign(globalThis, { chrome: chromeMock });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).defineContentScript = (definition: unknown) => definition;
 
+// WXT provides defineBackground as a global for background service worker entrypoints.
+// Stub it here so any test that transitively imports background.ts won't throw.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(globalThis as any).defineBackground = (definition: unknown) => definition;
+
 // Reset all mocks between tests so call counts don't bleed across
 beforeEach(() => {
   vi.clearAllMocks();
@@ -47,6 +57,8 @@ beforeEach(() => {
   chromeMock.downloads.download.mockResolvedValue(12345);
   chromeMock.storage.session.set.mockResolvedValue(undefined);
   chromeMock.storage.session.get.mockResolvedValue({});
+  chromeMock.storage.local.get.mockResolvedValue({});
+  chromeMock.storage.local.set.mockResolvedValue(undefined);
 });
 
 // Factory function to create mock port objects for testing the scan session lifecycle.
