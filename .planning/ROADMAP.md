@@ -42,7 +42,11 @@ Plans:
   2. Scanning a Viator or GetYourGuide page captures images loaded after scroll (lazy-loaded)
   3. Images rendered as CSS background-image properties appear in scan results
   4. When a srcset offers multiple sizes, only the highest-resolution URL is returned
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Create extraction modules (srcset parser, img tag scanner, CSS background scanner) with types and tests
+- [ ] 02-02-PLAN.md — Wire extractors into content script with long-lived port messaging and MutationObserver
 
 ### Phase 3: Popup and Naming
 **Goal**: Jennifer can open the extension popup on any travel site, see a thumbnail grid of all extracted images, fill in destination/vendor/category, select the photos she wants, and download them with correctly formatted filenames
@@ -64,5 +68,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-20 |
-| 2. Image Extraction | 0/TBD | Not started | - |
+| 2. Image Extraction | 0/2 | Not started | - |
 | 3. Popup and Naming | 0/TBD | Not started | - |
