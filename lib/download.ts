@@ -35,10 +35,12 @@ export async function buildSafeFilename(
   // The prefix we'll look for in history — e.g., "travel-photos/bali_pool"
   const pathPrefix = `${subfolder}/${basename}`;
 
-  // Query download history for anything containing the basename.
-  // Chrome's filenameContains is a substring match, so we'll filter more precisely below.
+  // Query download history for anything matching the basename.
+  // filenameRegex matches against the full absolute path, so we escape special chars.
+  // We'll filter more precisely below to avoid matching e.g. "bali_pool_resort".
+  const escapedBasename = basename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const existing = await chrome.downloads.search({
-    filenameContains: basename,
+    filenameRegex: escapedBasename,
     limit: 100,
   });
 
