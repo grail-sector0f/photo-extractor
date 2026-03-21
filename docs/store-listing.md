@@ -8,10 +8,10 @@ Save photos with structured names.
 
 ## Long Description
 
-Photo Extractor helps travel advisors and researchers save images from travel booking sites with organized, consistent filenames.
+Photo Extractor helps you save images from sites with organized, consistent filenames.
 
 **How it works:**
-1. Browse any travel site (Booking.com, Airbnb, Viator, GetYourGuide, and others)
+1. Browse any site 
 2. Click the Photo Extractor icon in your toolbar
 3. The extension scans the page and shows all images in a thumbnail grid
 4. Select the photos you want, fill in destination, vendor, and category fields
@@ -21,7 +21,7 @@ Photo Extractor helps travel advisors and researchers save images from travel bo
 - Extracts images even from sites that block right-click saving
 - Finds lazy-loaded images, CSS background images, and srcset images
 - Picks the highest resolution available from srcset and CDN URLs
-- Detects CDN patterns on Booking.com, Airbnb, Cloudinary, Imgix, Viator, and more to download full-size images instead of thumbnails
+- Detects CDN patterns on popular sites to download full-size images instead of thumbnails
 - Remembers your last-used form values when working on the same site
 - Select individual images or use Select All to grab everything at once
 
