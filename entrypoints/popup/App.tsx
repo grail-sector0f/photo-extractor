@@ -15,8 +15,12 @@
  *   - Download: selected image URLs are sent one-by-one to the background service
  *     worker via DOWNLOAD_FILE messages. The background has access to chrome.downloads;
  *     the popup does not.
- *   - Pre-fill: chrome.storage.local persists the last-used destination/vendor/category
+ *   - Pre-fill: chrome.storage.local persists the last-used destination/vendor/category/year
  *     and restores them on mount.
+ *
+ * Visual design: Material Design 3 color tokens (defined in tailwind.config.js),
+ * Manrope + Inter fonts (bundled WOFF2 in public/fonts/), inline SVG icons
+ * (Google Fonts CDN is inaccessible inside extension popups).
  */
 
 import { useReducer, useEffect } from 'react';
@@ -41,6 +45,8 @@ interface PopupState {
   destination: string;
   vendor: string;
   category: string;
+  // Year field — defaults to current year, persisted to chrome.storage.local
+  year: string;
   notes: string;
   downloadStatus: DownloadStatus;
   downloadProgress: { done: number; total: number };
@@ -58,11 +64,11 @@ type Action =
   | { type: 'TOGGLE_SELECT'; url: string }
   | { type: 'SELECT_ALL' }
   | { type: 'CLEAR_ALL' }
-  | { type: 'FIELD_CHANGE'; field: 'destination' | 'vendor' | 'category' | 'notes'; value: string }
+  | { type: 'FIELD_CHANGE'; field: 'destination' | 'vendor' | 'category' | 'year' | 'notes'; value: string }
   | { type: 'DOWNLOAD_STARTED'; total: number }
   | { type: 'DOWNLOAD_PROGRESS'; done: number }
   | { type: 'DOWNLOAD_DONE'; saved: number; failed: number }
-  | { type: 'PREFILL_LOADED'; destination: string; vendor: string; category: string };
+  | { type: 'PREFILL_LOADED'; destination: string; vendor: string; category: string; year: string };
 
 // ─── Initial State ────────────────────────────────────────────────────────────
 
@@ -74,6 +80,7 @@ export const initialState: PopupState = {
   destination: '',
   vendor: '',
   category: '',
+  year: String(new Date().getFullYear()),
   notes: '',
   downloadStatus: 'idle',
   downloadProgress: { done: 0, total: 0 },
@@ -91,7 +98,7 @@ export function popupReducer(state: PopupState, action: Action): PopupState {
   switch (action.type) {
     case 'SCAN_STARTED':
       // Clear previous scan results so stale images/selection don't persist
-      // into the new scan. Form fields (destination/vendor/category/notes) are
+      // into the new scan. Form fields (destination/vendor/category/year/notes) are
       // intentionally preserved — the user expects those to carry over.
       return {
         ...state,
@@ -181,6 +188,7 @@ export function popupReducer(state: PopupState, action: Action): PopupState {
         destination: action.destination,
         vendor: action.vendor,
         category: action.category,
+        year: action.year,
       };
 
     default:
@@ -276,7 +284,7 @@ async function startScan(dispatch: React.Dispatch<Action>): Promise<void> {
  * Promise.allSettled (not Promise.all) is used so that individual failures
  * don't abort the entire batch — we want "Saved 3 of 5, 2 failed" reporting.
  *
- * After completion, persists destination/vendor/category to chrome.storage.local
+ * After completion, persists destination/vendor/category/year to chrome.storage.local
  * so they pre-fill the next time Jennifer opens the popup.
  */
 async function runDownloads(
@@ -333,7 +341,7 @@ async function runDownloads(
   const saved = selectedUrls.length - failed;
   dispatch({ type: 'DOWNLOAD_DONE', saved, failed });
 
-  // Persist last-used field values and the current tab's hostname.
+  // Persist last-used field values (including year) and the current tab's hostname.
   // The hostname is used on next mount to decide whether to restore these values
   // (same site → restore, different site → start fresh).
   if (saved > 0) {
@@ -343,6 +351,7 @@ async function runDownloads(
         destination: state.destination,
         vendor: state.vendor,
         category: state.category,
+        year: state.year,
         lastHostname: hostname,
       });
     });
@@ -359,7 +368,8 @@ interface ThumbnailCardProps {
 
 /**
  * Single image tile in the grid.
- * Shows a blue ring and checkmark overlay when selected.
+ * Selected state: blue ring (ring-2 ring-primary) + blue tint overlay + green checkmark badge.
+ * Unselected state: slightly dimmed (opacity-80) with full opacity on hover.
  * Uses aria-pressed for screen reader accessibility.
  * Keyed by image.url (NOT by array index) to prevent re-render flicker
  * when new images stream in via IMAGE_FOUND.
@@ -370,8 +380,8 @@ function ThumbnailCard({ image, selected, onToggle }: ThumbnailCardProps) {
       onClick={() => onToggle(image.url)}
       aria-pressed={selected}
       className={[
-        'relative rounded overflow-hidden bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500',
-        selected ? 'ring-2 ring-blue-600' : '',
+        'relative rounded overflow-hidden bg-surface-container focus:outline-none group',
+        selected ? 'ring-2 ring-primary' : 'opacity-80 hover:opacity-100',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -390,19 +400,27 @@ function ThumbnailCard({ image, selected, onToggle }: ThumbnailCardProps) {
       />
       {/* Gray placeholder shown when image fails to load */}
       <div
-        className="hidden w-full h-20 bg-gray-200 items-center justify-center text-gray-400 text-lg"
+        className="hidden w-full h-20 bg-surface-container-high items-center justify-center text-on-surface-variant text-lg"
         aria-hidden="true"
       >
         ?
       </div>
-      {/* Blue checkmark overlay shown when selected */}
+      {/* MD3 selection overlay: blue tint + green checkmark badge */}
       {selected && (
-        <span
-          className="absolute inset-0 flex items-center justify-center bg-blue-600/20 text-blue-600 text-lg font-bold"
-          aria-hidden="true"
-        >
-          ✓
-        </span>
+        <>
+          {/* Subtle blue tint over the whole tile */}
+          <div className="absolute inset-0 bg-primary/10" aria-hidden="true" />
+          {/* Green filled checkmark badge in top-right corner */}
+          <span
+            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-tertiary flex items-center justify-center"
+            aria-hidden="true"
+          >
+            {/* Checkmark path from Material Symbols */}
+            <svg className="w-3 h-3 text-on-tertiary" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9.55 18l-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4z"/>
+            </svg>
+          </span>
+        </>
       )}
     </button>
   );
@@ -425,12 +443,12 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   if (scanStatus === 'scanning') {
     return (
       <div className="flex-1 overflow-y-auto p-2">
-        <p className="text-[13px] text-gray-500 mb-2 px-1">Scanning page...</p>
+        <p className="text-[13px] text-on-surface-variant mb-2 px-1">Scanning page...</p>
         <div className="grid grid-cols-3 gap-1">
           {Array.from({ length: 9 }).map((_, i) => (
             <div
               key={i}
-              className="bg-gray-200 animate-pulse rounded h-20"
+              className="bg-surface-container animate-pulse rounded h-20"
               aria-hidden="true"
             />
           ))}
@@ -443,8 +461,8 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   if (scanStatus === 'timeout') {
     return (
       <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-center">
-        <p className="text-[15px] font-semibold text-gray-700 mb-1">No photos found</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] font-semibold text-on-surface mb-1">No photos found</p>
+        <p className="text-[13px] text-on-surface-variant">
           The page scan timed out. Try scrolling to load more images, then scan again.
         </p>
       </div>
@@ -455,8 +473,8 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   if (scanStatus === 'done' && images.length === 0) {
     return (
       <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-center">
-        <p className="text-[15px] font-semibold text-gray-700 mb-1">No photos found</p>
-        <p className="text-[13px] text-gray-500">
+        <p className="text-[15px] font-semibold text-on-surface mb-1">No photos found</p>
+        <p className="text-[13px] text-on-surface-variant">
           This page doesn&apos;t have any extractable images. Try scrolling to load more, then
           reopen the extension.
         </p>
@@ -468,7 +486,7 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   if (scanStatus === 'idle') {
     return (
       <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-center">
-        <p className="text-[13px] text-gray-400">Click &quot;Scan Page&quot; to find images.</p>
+        <p className="text-[13px] text-on-surface-variant">Click &quot;Scan Page&quot; to find images.</p>
       </div>
     );
   }
@@ -491,29 +509,36 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   );
 }
 
-interface SelectionBarProps {
+interface GalleryHeaderProps {
   images: ImageResult[];
-  selected: Set<string>;
   onSelectAll: () => void;
   onClearAll: () => void;
 }
 
 /**
- * Row showing selection count and a Select All / Clear All toggle.
- * The button label changes based on whether all images are selected.
+ * Row above the thumbnail grid showing photo count badge, "Gallery" heading,
+ * and separate "Select All" / "Clear All" action links.
+ * Replaces the old SelectionBar component (which showed "N selected" + a single toggle).
  */
-function SelectionBar({ images, selected, onSelectAll, onClearAll }: SelectionBarProps) {
-  const allSelected = images.length > 0 && selected.size === images.length;
-
+function GalleryHeader({ images, onSelectAll, onClearAll }: GalleryHeaderProps) {
   return (
     <div className="flex items-center justify-between px-4 py-2">
-      <span className="text-[13px] text-gray-600">{selected.size} selected</span>
-      <button
-        onClick={allSelected ? onClearAll : onSelectAll}
-        className="text-[13px] text-blue-600 hover:underline"
-      >
-        {allSelected ? 'Clear All' : 'Select All'}
-      </button>
+      <div className="flex items-center gap-2">
+        {/* Count badge — uses secondary-fixed surface so it reads as a quiet label */}
+        <span className="px-2 py-0.5 text-xs font-semibold bg-secondary-fixed text-on-secondary-container rounded-full">
+          {images.length}
+        </span>
+        <h2 className="text-lg font-extrabold font-manrope text-on-surface">Gallery</h2>
+      </div>
+      {/* Two separate action links instead of a single toggle */}
+      <div className="flex gap-3">
+        <button onClick={onSelectAll} className="text-sm text-primary hover:underline">
+          Select All
+        </button>
+        <button onClick={onClearAll} className="text-sm text-on-surface-variant hover:underline">
+          Clear All
+        </button>
+      </div>
     </div>
   );
 }
@@ -522,24 +547,34 @@ interface NamingFormProps {
   destination: string;
   vendor: string;
   category: string;
+  year: string;
   notes: string;
-  onChange: (field: 'destination' | 'vendor' | 'category' | 'notes', value: string) => void;
+  onChange: (field: 'destination' | 'vendor' | 'category' | 'year' | 'notes', value: string) => void;
 }
 
 /**
- * Four text fields: Destination, Property/Vendor, Category (with datalist presets),
- * and Notes (optional). Labels are real <label> elements for accessibility —
- * placeholders alone are not sufficient for screen readers.
+ * Metadata form wrapped in an MD3 surface-container-low card.
+ * Fields: Destination, Property/Vendor, Category (select) + Year (number) side-by-side, Notes (textarea).
+ * Labels are real <label> elements for accessibility.
+ * Category is a locked <select> dropdown (not free-text) with 4 preset options.
+ * Year defaults to current year and persists to storage alongside other fields.
  */
-function NamingForm({ destination, vendor, category, notes, onChange }: NamingFormProps) {
+function NamingForm({ destination, vendor, category, year, notes, onChange }: NamingFormProps) {
+  // MD3-styled input: white fill (surface-container-lowest), no visible border, focus ring
   const inputClass =
-    'w-full px-2 py-2 text-[13px] bg-gray-100 rounded border-0 focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const labelClass = 'text-xs text-gray-600';
+    'w-full bg-surface-container-lowest border-none rounded-lg p-3 text-sm font-inter text-on-surface focus:ring-2 focus:ring-primary/40 focus:outline-none';
+  const labelClass = 'text-xs font-medium font-inter text-on-surface-variant mb-1 block';
 
   return (
-    <div className="px-4 pb-3 space-y-2">
+    // Card wrapper — light gray background that lifts the form off the white page surface
+    <div className="mx-4 my-3 bg-surface-container-low p-5 rounded-xl">
+      {/* Section label — uppercase tracking gives it a quiet "label" treatment */}
+      <p className="text-[10px] font-semibold tracking-widest text-on-surface-variant uppercase mb-3">
+        Metadata Assignment
+      </p>
+
       {/* Destination */}
-      <div>
+      <div className="mb-3">
         <label htmlFor="field-destination" className={labelClass}>
           Destination
         </label>
@@ -554,7 +589,7 @@ function NamingForm({ destination, vendor, category, notes, onChange }: NamingFo
       </div>
 
       {/* Property / Vendor */}
-      <div>
+      <div className="mb-3">
         <label htmlFor="field-vendor" className={labelClass}>
           Property / Vendor
         </label>
@@ -568,46 +603,56 @@ function NamingForm({ destination, vendor, category, notes, onChange }: NamingFo
         />
       </div>
 
-      {/* Category — free text with datalist suggestions */}
-      <div>
-        <label htmlFor="field-category" className={labelClass}>
-          Category
-        </label>
-        <input
-          id="field-category"
-          type="text"
-          value={category}
-          placeholder="e.g. pool, room, excursion"
-          list="category-presets"
-          onChange={(e) => onChange('category', e.target.value)}
-          className={inputClass}
-        />
-        {/* Non-binding preset suggestions — Jennifer can type any value */}
-        <datalist id="category-presets">
-          <option value="room" />
-          <option value="pool" />
-          <option value="lobby" />
-          <option value="exterior" />
-          <option value="food" />
-          <option value="excursion" />
-          <option value="beach" />
-          <option value="spa" />
-          <option value="activities" />
-        </datalist>
+      {/* Category + Year — side by side in a 2-column grid */}
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        {/* Category — locked select dropdown (no free-text entry) */}
+        <div>
+          <label htmlFor="field-category" className={labelClass}>
+            Category
+          </label>
+          <select
+            id="field-category"
+            value={category}
+            onChange={(e) => onChange('category', e.target.value)}
+            className={`${inputClass} appearance-none`}
+          >
+            <option value="">Select...</option>
+            <option value="landscape">Landscape</option>
+            <option value="accommodation">Accommodation</option>
+            <option value="dining">Dining</option>
+            <option value="activities">Activities</option>
+          </select>
+        </div>
+
+        {/* Year — number input, min/max bounded, defaults to current year */}
+        <div>
+          <label htmlFor="field-year" className={labelClass}>
+            Year
+          </label>
+          <input
+            id="field-year"
+            type="number"
+            value={year}
+            min="2000"
+            max="2099"
+            onChange={(e) => onChange('year', e.target.value)}
+            className={inputClass}
+          />
+        </div>
       </div>
 
-      {/* Notes — optional, not required for download */}
+      {/* Notes — textarea replaces the previous single-line input */}
       <div>
         <label htmlFor="field-notes" className={labelClass}>
           Notes (optional)
         </label>
-        <input
+        <textarea
           id="field-notes"
-          type="text"
+          rows={2}
           value={notes}
-          placeholder="e.g. lobby, beachfront"
+          placeholder="Add a description for the advisor..."
           onChange={(e) => onChange('notes', e.target.value)}
-          className={inputClass}
+          className={`${inputClass} resize-none`}
         />
       </div>
     </div>
@@ -619,6 +664,7 @@ interface DownloadButtonProps {
   destination: string;
   vendor: string;
   category: string;
+  year: string;
   notes: string;
   downloadStatus: DownloadStatus;
   images: ImageResult[];
@@ -627,15 +673,18 @@ interface DownloadButtonProps {
 }
 
 /**
- * Primary CTA button. Disabled until at least 1 image is selected AND all
- * three required fields have non-whitespace content (uses .trim() check — plain
- * .length > 0 would allow whitespace-only strings that produce malformed filenames).
+ * Sticky download footer with gradient fade.
+ * Button is full-width, MD3 primary-container styling, Manrope extrabold.
+ * Disabled until at least 1 image is selected AND all three required fields
+ * have non-whitespace content. Year is not required for download — only destination,
+ * vendor, and category are required.
  */
 function DownloadButton({
   selected,
   destination,
   vendor,
   category,
+  year,
   notes,
   downloadStatus,
   images: _images,
@@ -666,18 +715,24 @@ function DownloadButton({
 
   const handleClick = () => {
     if (!isEnabled) return;
-    const basename = buildBasename(destination, vendor, category, notes);
+    // Pass year as the 4th argument — inserted between category and notes
+    const basename = buildBasename(destination, vendor, category, year, notes);
     const selectedUrls = Array.from(selected);
     runDownloads(selectedUrls, basename, state, dispatch);
   };
 
   return (
-    <div className="px-4 pb-2">
+    // Gradient fade from solid white (surface) to transparent — creates a "floating" button effect
+    <div className="sticky bottom-0 bg-gradient-to-t from-surface via-surface to-transparent pt-8 px-4 pb-4">
       <button
         onClick={handleClick}
         disabled={!isEnabled}
-        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-[13px] font-medium"
+        className="w-full bg-primary-container text-on-primary-container font-manrope font-extrabold py-4 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity flex items-center justify-center gap-2"
       >
+        {/* Download icon — Material Symbols download path */}
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 16l-5-5 1.4-1.45 2.6 2.6V4h2v8.15l2.6-2.6L17 11l-5 5Zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20H6Z"/>
+        </svg>
         {label}
       </button>
     </div>
@@ -709,20 +764,20 @@ function StatusMessage({
 
   if (downloadStatus === 'downloading') {
     message = `Saving ${downloadProgress.done} of ${downloadProgress.total}...`;
-    colorClass = 'text-gray-600';
+    colorClass = 'text-on-surface-variant';
   } else if (downloadStatus === 'success') {
     // Singular for 1 photo, plural for N
     const photoWord = downloadSaved === 1 ? 'photo' : 'photos';
     message = `Saved ${downloadSaved} ${photoWord} to Downloads/travel-photos/`;
-    colorClass = 'text-gray-600';
+    colorClass = 'text-on-surface-variant';
   } else if (downloadStatus === 'partial') {
     // Use em dash character as specified in the UI-SPEC copywriting contract
     message = `Saved ${downloadSaved} of ${downloadSaved + downloadFailed} photos \u2014 ${downloadFailed} failed to download.`;
-    colorClass = 'text-red-600';
+    colorClass = 'text-error';
   } else {
     // 'error' — all downloads failed
     message = 'Download failed. Check your internet connection and try again.';
-    colorClass = 'text-red-600';
+    colorClass = 'text-error';
   }
 
   return (
@@ -738,40 +793,38 @@ interface PopupHeaderProps {
 }
 
 /**
- * Fixed header showing the extension name, image count badge, and Scan Page button.
+ * Sticky header with backdrop blur — floats above content while scrolling.
+ * Left: camera SVG icon + "Photo Extractor" in Manrope bold.
+ * Right: "Scan Page" button with MD3 primary-container styling.
+ *
+ * Google Fonts CDN is inaccessible inside extension popups, so Material Symbols
+ * web font cannot be used. Inline SVG paths from Material Symbols are used instead.
+ *
  * The Scan Page button is visible in idle, done, and timeout states — Jennifer can
  * rescan if she navigates to new content or wants a fresh result.
  */
-function PopupHeader({ scanStatus, imageCount, blobCount, onScan }: PopupHeaderProps) {
+function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCount, onScan }: PopupHeaderProps) {
   const showScanButton = scanStatus === 'idle' || scanStatus === 'done' || scanStatus === 'timeout';
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-      <div>
-        <h1 className="text-[15px] font-semibold text-gray-900">Photo Extractor</h1>
-        {/* Show image count once scan has results */}
-        {scanStatus === 'done' && (
-          <div className="flex items-center gap-1 mt-0.5">
-            <span className="text-[11px] font-semibold text-gray-500">
-              {imageCount} {imageCount === 1 ? 'image' : 'images'} found
-            </span>
-            {/* Blob URL notice: some images are served as blob: URLs and cannot be captured */}
-            {blobCount > 0 && (
-              <span className="text-[11px] text-gray-400">
-                ({blobCount} blob {blobCount === 1 ? 'image' : 'images'} could not be captured)
-              </span>
-            )}
-          </div>
+    <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-md shadow-sm shadow-slate-200/50">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2">
+          {/* Camera icon — SVG path from Material Symbols camera_enhance */}
+          <svg className="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 17.5q2.08 0 3.54-1.46T17 12.5q0-2.08-1.46-3.54T12 7.5q-2.08 0-3.54 1.46T7 12.5q0 2.08 1.46 3.54T12 17.5Zm0-2q-1.25 0-2.125-.875T9 12.5q0-1.25.875-2.125T12 9.5q1.25 0 2.125.875T15 12.5q0 1.25-.875 2.125T12 15.5ZM4 21q-.825 0-1.412-.587T2 19V6q0-.825.587-1.412T4 4h3.15L9 2h6l1.85 2H20q.825 0 1.413.587T22 6v13q0 .825-.587 1.413T20 21H4Z"/>
+          </svg>
+          <h1 className="text-base font-bold font-manrope text-on-surface">Photo Extractor</h1>
+        </div>
+        {showScanButton && (
+          <button
+            onClick={onScan}
+            className="px-4 py-1.5 text-sm font-medium bg-primary-container text-on-primary-container rounded-lg hover:opacity-90 transition-opacity"
+          >
+            Scan Page
+          </button>
         )}
       </div>
-      {showScanButton && (
-        <button
-          onClick={onScan}
-          className="text-[13px] text-blue-600 hover:underline font-medium"
-        >
-          Scan Page
-        </button>
-      )}
     </div>
   );
 }
@@ -782,6 +835,7 @@ function PopupHeader({ scanStatus, imageCount, blobCount, onScan }: PopupHeaderP
  * Root popup component. Mounts useReducer, wires all child components,
  * and handles the two side effects:
  *   1. Pre-fill on mount — reads chrome.storage.local for last-used values
+ *      (destination, vendor, category, year)
  *   2. Scan port — opened by "Scan Page" button click (not on mount)
  */
 export default function App() {
@@ -793,7 +847,7 @@ export default function App() {
   // but navigating to a new site starts fresh instead of showing stale values.
   useEffect(() => {
     Promise.all([
-      chrome.storage.local.get(['destination', 'vendor', 'category', 'lastHostname']),
+      chrome.storage.local.get(['destination', 'vendor', 'category', 'year', 'lastHostname']),
       chrome.tabs.query({ active: true, currentWindow: true }),
     ]).then(([data, tabs]) => {
       const currentHostname = tabs[0]?.url ? new URL(tabs[0].url).hostname : null;
@@ -806,6 +860,8 @@ export default function App() {
           destination: (data.destination as string) ?? '',
           vendor: (data.vendor as string) ?? '',
           category: (data.category as string) ?? '',
+          // Fall back to current year if year wasn't previously saved
+          year: (data.year as string) ?? String(new Date().getFullYear()),
         });
       }
     });
@@ -828,24 +884,34 @@ export default function App() {
   };
 
   const handleFieldChange = (
-    field: 'destination' | 'vendor' | 'category' | 'notes',
+    field: 'destination' | 'vendor' | 'category' | 'year' | 'notes',
     value: string,
   ) => {
     dispatch({ type: 'FIELD_CHANGE', field, value });
   };
 
-  const showBottomSection =
-    state.scanStatus === 'done' && state.images.length > 0;
+  const showGallery = state.scanStatus === 'done' && state.images.length > 0;
 
   return (
     // Fixed 360px width per UI-SPEC. maxHeight 600px is Chrome's popup viewport limit.
-    <div className="w-[360px] flex flex-col" style={{ maxHeight: '600px' }}>
+    // font-inter is the default body font; Manrope is applied selectively to headings and buttons.
+    <div className="w-[360px] flex flex-col font-inter" style={{ maxHeight: '600px' }}>
+      {/* Sticky header: camera icon, title, and Scan Page button */}
       <PopupHeader
         scanStatus={state.scanStatus}
         imageCount={state.images.length}
         blobCount={state.blobCount}
         onScan={handleScan}
       />
+
+      {/* Gallery header: count badge + "Gallery" heading + Select All / Clear All links */}
+      {showGallery && (
+        <GalleryHeader
+          images={state.images}
+          onSelectAll={handleSelectAll}
+          onClearAll={handleClearAll}
+        />
+      )}
 
       {/* Scrollable thumbnail grid — fills remaining vertical space */}
       <ThumbnailGrid
@@ -855,19 +921,14 @@ export default function App() {
         onToggle={handleToggle}
       />
 
-      {/* Sticky bottom section: selection bar, naming form, download button */}
-      {showBottomSection && (
-        <div className="border-t bg-white">
-          <SelectionBar
-            images={state.images}
-            selected={state.selected}
-            onSelectAll={handleSelectAll}
-            onClearAll={handleClearAll}
-          />
+      {/* Metadata form and sticky download footer — shown when scan has results */}
+      {showGallery && (
+        <>
           <NamingForm
             destination={state.destination}
             vendor={state.vendor}
             category={state.category}
+            year={state.year}
             notes={state.notes}
             onChange={handleFieldChange}
           />
@@ -876,6 +937,7 @@ export default function App() {
             destination={state.destination}
             vendor={state.vendor}
             category={state.category}
+            year={state.year}
             notes={state.notes}
             downloadStatus={state.downloadStatus}
             images={state.images}
@@ -888,7 +950,7 @@ export default function App() {
             downloadSaved={state.downloadSaved}
             downloadFailed={state.downloadFailed}
           />
-        </div>
+        </>
       )}
     </div>
   );
