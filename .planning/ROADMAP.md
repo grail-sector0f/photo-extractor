@@ -110,3 +110,14 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 3. Popup and Naming | 3/3 | Complete   | 2026-03-20 |
 | 4. CDN URL Upscaling | 2/2 | Complete   | 2026-03-21 |
 | 5. CWS Submission | 2/2 | Complete   | 2026-03-21 |
+
+## Backlog
+
+### Phase 999.1: Library view — sort saved photos by meta tags (BACKLOG)
+
+**Goal:** Give users a library screen to browse and sort all previously saved photos by meta tags (destination, vendor, category, year).
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd:review-backlog when ready)
