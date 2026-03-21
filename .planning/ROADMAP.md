@@ -113,18 +113,37 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 ## Backlog
 
-### Phase 999.1: Library view — sort saved photos by meta tags (BACKLOG)
+### Phase 999.1: UI Modernization + Year Field
 
-**Goal:** Give users a library screen to browse and sort all previously saved photos by meta tags (destination, vendor, category, year).
+**Goal:** Modernize the popup UI to match the Material Design 3 mockup (new color tokens, Manrope/Inter fonts, redesigned header, gallery, metadata form, sticky download footer) and add a Year field to the metadata form and filename format.
+**Depends on:** Phase 5
+**Requirements:** UIMOD-YEAR, UIMOD-TOKENS, UIMOD-FONTS, UIMOD-HEADER, UIMOD-GALLERY, UIMOD-FORM, UIMOD-FOOTER
+**Success Criteria** (what must be TRUE):
+  1. Popup uses MD3 color tokens (primary-container, surface-container-low, etc.) instead of default Tailwind blues/grays
+  2. Manrope and Inter fonts render correctly in the popup (bundled WOFF2, no CDN)
+  3. Year field appears in the metadata form as a number input, defaults to current year
+  4. Downloaded filenames include year segment: `destination_vendor_category_year[_notes]_index.ext`
+  5. Category is a locked dropdown (Landscape, Accommodation, Dining, Activities) not free text
+  6. No bottom navigation bar rendered
+**Plans:** 3 plans
+
+Plans:
+- [ ] 999.1-01-PLAN.md — Add year parameter to buildBasename with TDD
+- [ ] 999.1-02-PLAN.md — Set up MD3 design tokens in Tailwind config and bundle Manrope/Inter WOFF2 fonts
+- [ ] 999.1-03-PLAN.md — Rewrite popup UI with MD3 design system, Year field, and visual verification
+
+### Phase 999.2: Settings view — image quality control (BACKLOG)
+
+**Goal:** Give users a settings screen to control image quality scanning — e.g. minimum resolution threshold, file type filtering, CDN upscaling preferences.
 **Requirements:** TBD
 **Plans:** 0 plans
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
 
-### Phase 999.2: Settings view — image quality control (BACKLOG)
+### Phase 999.3: Library view — sort saved photos by meta tags (BACKLOG)
 
-**Goal:** Give users a settings screen to control image quality scanning — e.g. minimum resolution threshold, file type filtering, CDN upscaling preferences.
+**Goal:** Give users a library screen to browse and sort all previously saved photos by meta tags (destination, vendor, category, year).
 **Requirements:** TBD
 **Plans:** 0 plans
 
