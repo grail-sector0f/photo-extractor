@@ -81,10 +81,27 @@ Plans:
 - [ ] 04-01-PLAN.md — Create CDN URL rewrite module (rewriteUrlForMaxResolution) with TDD for 6 CDN providers
 - [ ] 04-02-PLAN.md — Integrate rewriter into download pipeline with fallback, build and verify in Chrome
 
+### Phase 5: Chrome Web Store Submission
+**Goal**: All CWS submission assets are ready: icons, polished manifest (v1.0.0), privacy policy on GitHub Pages, store listing copy, 440x280 promotional tile, and packaged ZIP -- so the extension can be uploaded to the Chrome Web Store for public distribution
+**Depends on:** Phase 4
+**Requirements**: CWS-ICONS, CWS-MANIFEST, CWS-PRIVACY, CWS-LISTING, CWS-PROMO, CWS-ZIP
+**Success Criteria** (what must be TRUE):
+  1. Extension has blue camera icons at 16, 32, 48, 128px declared in manifest
+  2. manifest.json version is 1.0.0 with 130-char description (under CWS 132 limit)
+  3. Privacy policy HTML exists at docs/privacy-policy.html disclosing downloads and storage permissions
+  4. Store listing copy is finalized with name, short description, long description, and category
+  5. 440x280 promotional tile PNG exists
+  6. ZIP package contains all extension files with correct manifest
+**Plans**: 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Generate icon PNGs, update manifest and package.json, create privacy policy HTML
+- [ ] 05-02-PLAN.md — Create store listing copy, promotional tile, build ZIP package, user review checkpoint
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -92,3 +109,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Image Extraction | 2/2 | Complete   | 2026-03-20 |
 | 3. Popup and Naming | 3/3 | Complete   | 2026-03-20 |
 | 4. CDN URL Upscaling | 2/2 | Complete   | 2026-03-21 |
+| 5. CWS Submission | 0/2 | Planned | - |
