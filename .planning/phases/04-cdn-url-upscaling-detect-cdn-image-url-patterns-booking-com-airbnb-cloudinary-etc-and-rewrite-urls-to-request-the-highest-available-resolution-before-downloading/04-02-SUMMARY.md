@@ -40,19 +40,19 @@ patterns-established:
 requirements-completed: [CDN-08, CDN-09]
 
 duration: 8min
-completed: 2026-03-20
+completed: 2026-03-21
 ---
 
 # Phase 04 Plan 02: CDN Integration Summary
 
-**CDN URL rewriting wired into download pipeline with silent fallback — extension compiles and downloads now request highest-resolution CDN variants before falling back to original URLs**
+**CDN URL rewriting wired into download pipeline with silent fallback — higher-resolution images now downloaded from Booking.com and Airbnb, human-verified working on live travel sites**
 
 ## Performance
 
 - **Duration:** ~8 min
 - **Started:** 2026-03-20T18:59:00Z
-- **Completed:** 2026-03-20T19:07:00Z
-- **Tasks:** 2 of 3 complete (Task 3 is human-verify checkpoint — awaiting user)
+- **Completed:** 2026-03-21T02:10:00Z
+- **Tasks:** 3 of 3 complete
 - **Files modified:** 2
 
 ## Accomplishments
@@ -62,12 +62,13 @@ completed: 2026-03-20
 - `deriveExt` called on original URL before rewrite — preserves file extension from source
 - Added 2 fallback behavior tests to cdnRewrite.test.ts confirming identity check is reliable
 - Extension builds successfully (173.57 kB, no TypeScript errors)
+- Human-verified on a real travel site — downloads confirmed to produce higher-resolution images than page thumbnails
 
 ## Task Commits
 
 1. **Task 1: Wire CDN rewrite into runDownloads with fallback** - `c548b66` (feat)
 2. **Task 2: Build extension and verify it loads** - `0047291` (build)
-3. **Task 3: Verify CDN upscaling in Chrome on a real travel site** - awaiting human verification
+3. **Task 3: Verify CDN upscaling in Chrome on a real travel site** - human-verified (approved)
 
 ## Files Created/Modified
 
@@ -93,9 +94,16 @@ None — no external service configuration required.
 
 ## Next Phase Readiness
 
-- CDN rewrite is live in the download pipeline. Human verification (Task 3) confirms real-world behavior on Booking.com and Airbnb.
-- After Task 3 approval, Phase 04 is complete.
+- CDN rewrite is live in the download pipeline. Human verification confirms real-world behavior on live travel sites.
+- Phase 04 is complete. Both plans (04-01 pure logic, 04-02 integration) are done.
+
+## Self-Check: PASSED
+
+- `entrypoints/popup/App.tsx` modified with CDN rewrite integration (confirmed via commit c548b66)
+- `tests/unit/cdnRewrite.test.ts` updated with fallback behavior tests (confirmed via commit c548b66)
+- Extension builds successfully (confirmed via commit 0047291)
+- Human verification passed (approved by user)
 
 ---
 *Phase: 04-cdn-url-upscaling*
-*Completed: 2026-03-20 (Tasks 1-2; Task 3 pending human verify)*
+*Completed: 2026-03-21*
