@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 999.1 context gathered
-last_updated: "2026-03-21T16:28:33.321Z"
+stopped_at: Completed 999.1-01-PLAN.md
+last_updated: "2026-03-21T16:45:38.137Z"
 progress:
   total_phases: 8
   completed_phases: 5
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 14
+  completed_plans: 12
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Jennifer can grab any photo she sees while browsing travel sites and have it saved, named, and ready to drop into a tern.travel itinerary without friction.
-**Current focus:** Phase 05 — chrome-web-store-submission-prepare-the-extension-for-public-distribution-icons-store-listing-copy-screenshots-privacy-policy-manifest-polish-and-packaged-zip-ready-to-submit
+**Current focus:** Phase 999.1 — ui-modernization-year-field
 
 ## Current Position
 
-Phase: 05 (chrome-web-store-submission-prepare-the-extension-for-public-distribution-icons-store-listing-copy-screenshots-privacy-policy-manifest-polish-and-packaged-zip-ready-to-submit) — EXECUTING
-Plan: 2 of 2
+Phase: 999.1 (ui-modernization-year-field) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Plan: 2 of 2
 | Phase 05 P01 | 10 | 2 tasks | 9 files |
 | Phase 05 P02 | 15 | 3 tasks | 4 files |
 | Phase 05 P02 | 20 | 4 tasks | 5 files |
+| Phase 999.1 P01 | 5 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,7 @@ Recent decisions affecting current work:
 - [Phase 05-02]: [GITHUB_USERNAME] placeholder retained in store-listing.md and privacy-policy.html — must be replaced before CWS submission
 - [Phase 05-02]: Brand names (Booking.com, Airbnb, Viator) replaced with generic descriptions in store-listing.md per user request during Task 4 review
 - [Phase 05-02]: Promo tile regenerated with Inter font (Google Fonts) for correct text rendering — original used system font stack which rendered differently across machines
+- [Phase 999.1-01]: year inserted as 4th parameter in buildBasename between category and notes; App.tsx call site left unchanged until Plan 03
 
 ### Roadmap Evolution
 
@@ -121,6 +123,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T16:28:33.319Z
-Stopped at: Phase 999.1 context gathered
-Resume file: .planning/phases/999.1-library-view-sort-saved-photos-by-meta-tags-destination-vendor-category-year/999.1-CONTEXT.md
+Last session: 2026-03-21T16:45:38.135Z
+Stopped at: Completed 999.1-01-PLAN.md
+Resume file: None
