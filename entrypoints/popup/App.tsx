@@ -22,6 +22,9 @@
 import { useReducer, useEffect } from 'react';
 import { buildBasename, deriveExt } from '../../lib/naming';
 import type { ImageResult } from '../../lib/extract/types';
+// CDN URL rewriting -- applies at download time only. Thumbnails in the grid use
+// original extracted URLs. See lib/cdnRewrite.ts for supported CDN patterns.
+import { rewriteUrlForMaxResolution } from '../../lib/cdnRewrite';
 
 // ─── State Types ──────────────────────────────────────────────────────────────
 
@@ -302,9 +305,26 @@ async function runDownloads(
 
   const results = await Promise.allSettled(
     selectedUrls.map(async (url, i) => {
+      // Derive extension from the ORIGINAL URL (before CDN rewrite) so the
+      // file extension comes from the actual image filename, not CDN transform params
       const ext = deriveExt(url);
-      await sendDownloadMessage(url, numberedBasenames[i], ext);
-      // Increment progress count after each successful download
+      const upscaledUrl = rewriteUrlForMaxResolution(url);
+
+      if (upscaledUrl === url) {
+        // No rewrite applied -- download directly
+        await sendDownloadMessage(url, numberedBasenames[i], ext);
+      } else {
+        // CDN rewrite applied -- try upscaled URL first, fall back to original
+        try {
+          await sendDownloadMessage(upscaledUrl, numberedBasenames[i], ext);
+        } catch {
+          // Rewritten URL failed (404 or network error) -- silently try original.
+          // If this also throws, Promise.allSettled catches it as 1 rejection.
+          await sendDownloadMessage(url, numberedBasenames[i], ext);
+        }
+      }
+
+      // Increment progress count after each successful download (or successful fallback)
       dispatch({ type: 'DOWNLOAD_PROGRESS', done: ++done });
     }),
   );

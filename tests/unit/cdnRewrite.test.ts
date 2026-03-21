@@ -177,6 +177,33 @@ describe('GetYourGuide', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Fallback behavior — identity check for "did a rewrite happen?"
+// ---------------------------------------------------------------------------
+//
+// The integration in App.tsx uses `upscaledUrl === url` (strict reference equality)
+// to decide whether a CDN rewrite occurred and the try/catch fallback path is needed.
+// These tests verify the two cases the caller depends on.
+
+describe('fallback behavior (identity check)', () => {
+  it('returns the SAME reference (toBe) for an unknown URL — no rewrite occurred', () => {
+    // When no CDN pattern matches, the caller can skip the fallback path.
+    // toBe checks reference equality (===), not just value equality.
+    const input = 'https://images.example.com/photo.jpg?w=300';
+    const result = rewriteUrlForMaxResolution(input);
+    expect(result).toBe(input); // Same string reference — === is safe to use in App.tsx
+  });
+
+  it('returns a DIFFERENT string for a known CDN URL — rewrite occurred', () => {
+    // When a CDN pattern matches, the returned string is different from the input.
+    // App.tsx uses `upscaledUrl !== url` to enter the try/catch fallback path.
+    const input = 'https://cf.bstatic.com/xdata/images/hotel/max1024x768/12345.jpg?k=abc';
+    const result = rewriteUrlForMaxResolution(input);
+    expect(result).not.toBe(input); // Different string — rewrite happened, fallback path needed
+    expect(result).toContain('/max10000x10000/'); // Confirm rewrite is correct
+  });
+});
+
+// ---------------------------------------------------------------------------
 // No-match / edge cases
 // ---------------------------------------------------------------------------
 
