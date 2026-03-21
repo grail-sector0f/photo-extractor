@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 999.1-02-PLAN.md
-last_updated: "2026-03-21T16:48:56.090Z"
+stopped_at: Completed 999.1-03-PLAN.md
+last_updated: "2026-03-21T20:36:28.934Z"
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -60,6 +60,7 @@ Plan: 3 of 3
 | Phase 05 P02 | 20 | 4 tasks | 5 files |
 | Phase 999.1 P01 | 5 | 1 tasks | 2 files |
 | Phase 999.1 P02 | 2 | 2 tasks | 4 files |
+| Phase 999.1 P03 | 25 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,7 @@ Recent decisions affecting current work:
 - [Phase 999.1-01]: year inserted as 4th parameter in buildBasename between category and notes; App.tsx call site left unchanged until Plan 03
 - [Phase 999.1]: Google Fonts CSS API used to discover current WOFF2 URLs (v15 static URLs were 404; v20 URLs fetched dynamically)
 - [Phase 999.1]: Variable weight range (400 800) used in @font-face — one WOFF2 file covers all weights for each family
+- [Phase 999.1]: Camera icon bumped to w-8 h-8 (32px) for header visibility; gallery grid capped at 210px max-height; added 'restricted' ScanStatus with URL scheme check for blank-tab guard
 
 ### Roadmap Evolution
 
@@ -126,6 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T16:48:56.087Z
-Stopped at: Completed 999.1-02-PLAN.md
+Last session: 2026-03-21T20:36:28.932Z
+Stopped at: Completed 999.1-03-PLAN.md
 Resume file: None
