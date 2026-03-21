@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-21T04:39:40.290Z"
+stopped_at: Completed 05-02-PLAN.md tasks 1-3, awaiting Task 4 human-verify checkpoint
+last_updated: "2026-03-21T05:00:08.252Z"
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -56,6 +56,7 @@ Plan: 1 of 2
 | Phase 04 P02 | 8 | 2 tasks | 2 files |
 | Phase 04 P02 | 8 | 3 tasks | 2 files |
 | Phase 05 P01 | 10 | 2 tasks | 9 files |
+| Phase 05 P02 | 15 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,9 @@ Recent decisions affecting current work:
 - [Phase 05]: PNG icons generated via Node.js-only script (zlib + manual chunk encoding) — zero new runtime deps
 - [Phase 05]: Description set to 'Save photos with structured names.' (34 chars) — user-approved CWS copy
 - [Phase 05]: privacy-policy.html uses [GITHUB_USERNAME] placeholder — must be replaced before enabling GitHub Pages
+- [Phase 05-02]: Screenshot saved as .jpg by user (plan specified .png) — CWS accepts both, no action needed
+- [Phase 05-02]: ZIP excluded from git (.output/ gitignored) — reproducible via npm run zip
+- [Phase 05-02]: [GITHUB_USERNAME] placeholder retained in store-listing.md and privacy-policy.html — must be replaced before CWS submission
 
 ### Roadmap Evolution
 
@@ -114,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T04:39:40.288Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-21T05:00:08.250Z
+Stopped at: Completed 05-02-PLAN.md tasks 1-3, awaiting Task 4 human-verify checkpoint
 Resume file: None

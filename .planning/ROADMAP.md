@@ -109,4 +109,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Image Extraction | 2/2 | Complete   | 2026-03-20 |
 | 3. Popup and Naming | 3/3 | Complete   | 2026-03-20 |
 | 4. CDN URL Upscaling | 2/2 | Complete   | 2026-03-21 |
-| 5. CWS Submission | 1/2 | In Progress|  |
+| 5. CWS Submission | 2/2 | Complete   | 2026-03-21 |
