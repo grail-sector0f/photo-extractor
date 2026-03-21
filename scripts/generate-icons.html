@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generate Photo Extractor Icons</title></head>
+<body>
+<h1>Photo Extractor Icon Generator</h1>
+<p>Click each button to download the icon PNG:</p>
+<div id="buttons"></div>
+<div id="previews"></div>
+<script>
+const sizes = [16, 32, 48, 128];
+
+function drawIcon(ctx, size) {
+  const s = size;
+  const pad = Math.max(1, Math.round(s * 0.06));
+
+  // Blue background with rounded corners
+  ctx.fillStyle = '#2563EB';
+  const r = Math.round(s * 0.18);
+  ctx.beginPath();
+  ctx.moveTo(pad + r, pad);
+  ctx.lineTo(s - pad - r, pad);
+  ctx.quadraticCurveTo(s - pad, pad, s - pad, pad + r);
+  ctx.lineTo(s - pad, s - pad - r);
+  ctx.quadraticCurveTo(s - pad, s - pad, s - pad - r, s - pad);
+  ctx.lineTo(pad + r, s - pad);
+  ctx.quadraticCurveTo(pad, s - pad, pad, s - pad - r);
+  ctx.lineTo(pad, pad + r);
+  ctx.quadraticCurveTo(pad, pad, pad + r, pad);
+  ctx.closePath();
+  ctx.fill();
+
+  // White camera body
+  ctx.fillStyle = '#FFFFFF';
+  const bw = s * 0.62;
+  const bh = s * 0.42;
+  const bx = (s - bw) / 2;
+  const by = s * 0.34;
+  const br = Math.max(1, Math.round(s * 0.08));
+  ctx.beginPath();
+  ctx.moveTo(bx + br, by);
+  ctx.lineTo(bx + bw - br, by);
+  ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
+  ctx.lineTo(bx + bw, by + bh - br);
+  ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
+  ctx.lineTo(bx + br, by + bh);
+  ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
+  ctx.lineTo(bx, by + br);
+  ctx.quadraticCurveTo(bx, by, bx + br, by);
+  ctx.closePath();
+  ctx.fill();
+
+  // Viewfinder bump on top
+  const vw = s * 0.22;
+  const vh = s * 0.10;
+  const vx = (s - vw) / 2;
+  const vy = by - vh + 1;
+  ctx.fillRect(Math.round(vx), Math.round(vy), Math.round(vw), Math.round(vh + 1));
+
+  // Camera lens (blue circle inside white body)
+  ctx.fillStyle = '#2563EB';
+  const lensR = s * 0.13;
+  const lensX = s / 2;
+  const lensY = by + bh / 2 + s * 0.02;
+  ctx.beginPath();
+  ctx.arc(lensX, lensY, lensR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Lens highlight (small white dot)
+  if (s >= 32) {
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath();
+    ctx.arc(lensX - lensR * 0.3, lensY - lensR * 0.3, lensR * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+const btns = document.getElementById('buttons');
+const previews = document.getElementById('previews');
+
+sizes.forEach(size => {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  drawIcon(ctx, size);
+
+  // Show preview (scaled up for small icons)
+  const previewSize = Math.max(size, 64);
+  const previewCanvas = document.createElement('canvas');
+  previewCanvas.width = previewCanvas.height = previewSize;
+  previewCanvas.style.border = '1px solid #ccc';
+  previewCanvas.style.margin = '8px';
+  const pctx = previewCanvas.getContext('2d');
+  pctx.imageSmoothingEnabled = false;
+  pctx.drawImage(canvas, 0, 0, previewSize, previewSize);
+  previews.appendChild(previewCanvas);
+
+  const btn = document.createElement('button');
+  btn.textContent = 'Download icon-' + size + '.png';
+  btn.style.margin = '4px';
+  btn.style.padding = '8px 16px';
+  btn.onclick = () => {
+    canvas.toBlob(blob => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'icon-' + size + '.png';
+      a.click();
+    });
+  };
+  btns.appendChild(btn);
+});
+
+// Download all button
+const allBtn = document.createElement('button');
+allBtn.textContent = 'Download ALL';
+allBtn.style.margin = '4px';
+allBtn.style.padding = '8px 16px';
+allBtn.style.fontWeight = 'bold';
+allBtn.onclick = () => {
+  document.querySelectorAll('#buttons button:not(:last-child)').forEach(b => b.click());
+};
+btns.appendChild(allBtn);
+</script>
+</body>
+</html>
