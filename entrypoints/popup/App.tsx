@@ -333,12 +333,18 @@ async function runDownloads(
   const saved = selectedUrls.length - failed;
   dispatch({ type: 'DOWNLOAD_DONE', saved, failed });
 
-  // Persist last-used field values so they pre-fill on next popup open
+  // Persist last-used field values and the current tab's hostname.
+  // The hostname is used on next mount to decide whether to restore these values
+  // (same site → restore, different site → start fresh).
   if (saved > 0) {
-    chrome.storage.local.set({
-      destination: state.destination,
-      vendor: state.vendor,
-      category: state.category,
+    chrome.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+      const hostname = tabs[0]?.url ? new URL(tabs[0].url).hostname : '';
+      chrome.storage.local.set({
+        destination: state.destination,
+        vendor: state.vendor,
+        category: state.category,
+        lastHostname: hostname,
+      });
     });
   }
 }
@@ -781,16 +787,27 @@ function PopupHeader({ scanStatus, imageCount, blobCount, onScan }: PopupHeaderP
 export default function App() {
   const [state, dispatch] = useReducer(popupReducer, initialState);
 
-  // Pre-fill form fields from last-used values stored in chrome.storage.local.
-  // Runs once on mount — no dependencies because we only want this on first open.
+  // Pre-fill form fields from last-used values stored in chrome.storage.local,
+  // but only if the current tab's hostname matches where those values were saved.
+  // This way, browsing multiple listings on the same site carries fields over,
+  // but navigating to a new site starts fresh instead of showing stale values.
   useEffect(() => {
-    chrome.storage.local.get(['destination', 'vendor', 'category']).then((data) => {
-      dispatch({
-        type: 'PREFILL_LOADED',
-        destination: (data.destination as string) ?? '',
-        vendor: (data.vendor as string) ?? '',
-        category: (data.category as string) ?? '',
-      });
+    Promise.all([
+      chrome.storage.local.get(['destination', 'vendor', 'category', 'lastHostname']),
+      chrome.tabs.query({ active: true, currentWindow: true }),
+    ]).then(([data, tabs]) => {
+      const currentHostname = tabs[0]?.url ? new URL(tabs[0].url).hostname : null;
+      const storedHostname = data.lastHostname as string | undefined;
+
+      // Only restore if we're on the same site as the last save
+      if (currentHostname && storedHostname && currentHostname === storedHostname) {
+        dispatch({
+          type: 'PREFILL_LOADED',
+          destination: (data.destination as string) ?? '',
+          vendor: (data.vendor as string) ?? '',
+          category: (data.category as string) ?? '',
+        });
+      }
     });
   }, []);
 
