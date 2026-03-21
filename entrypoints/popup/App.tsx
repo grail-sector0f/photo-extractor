@@ -555,10 +555,9 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   }
 
   // Populated state: show all found images in a 3-column grid.
-  // max-h-[210px] caps the gallery at ~2.5 rows so the metadata form is always visible below.
-  // overflow-y-auto allows scrolling through additional images without hiding the form.
+  // No max-height here — the parent scroll area handles overflow for the whole middle section.
   return (
-    <div className="overflow-y-auto p-2" style={{ maxHeight: '210px' }}>
+    <div className="p-2">
       <div className="grid grid-cols-3 gap-1">
         {images.map((image) => (
           // Key by URL, not index — prevents flicker when images stream in via IMAGE_FOUND
@@ -787,8 +786,9 @@ function DownloadButton({
   };
 
   return (
-    // Gradient fade from solid white (surface) to transparent — creates a "floating" button effect
-    <div className="sticky bottom-0 bg-gradient-to-t from-surface via-surface to-transparent pt-8 px-4 pb-4">
+    // Gradient fade above the button — creates a "floating" button effect at the bottom of the popup.
+    // No longer needs sticky — the parent flex layout pins this below the scroll area.
+    <div className="bg-gradient-to-t from-surface via-surface to-transparent pt-8 px-4 pb-4">
       <button
         onClick={handleClick}
         disabled={!isEnabled}
@@ -958,10 +958,13 @@ export default function App() {
   const showGallery = state.scanStatus === 'done' && state.images.length > 0;
 
   return (
-    // Fixed 360px width per UI-SPEC. maxHeight 600px is Chrome's popup viewport limit.
-    // overflow-y-auto on the root lets the whole popup scroll when content exceeds 600px.
+    // Fixed 360px × 600px. Chrome's popup viewport limit is 600px tall.
+    // Header is sticky at the top. Download footer is sticky at the bottom.
+    // The middle flex-1 area scrolls freely — gallery images appear first,
+    // metadata form below. Users scroll down from photos to fill in fields.
+    // min-h-0 on the scroll area is required in flex columns to allow shrinking below content size.
     // font-inter is the default body font; Manrope is applied selectively to headings and buttons.
-    <div className="w-[360px] flex flex-col font-inter overflow-y-auto" style={{ maxHeight: '600px' }}>
+    <div className="w-[360px] flex flex-col font-inter" style={{ height: '600px' }}>
       {/* Sticky header: camera icon, title, and Scan Page button */}
       <PopupHeader
         scanStatus={state.scanStatus}
@@ -970,26 +973,27 @@ export default function App() {
         onScan={handleScan}
       />
 
-      {/* Gallery header: count badge + "Gallery" heading + Select All / Clear All links */}
-      {showGallery && (
-        <GalleryHeader
+      {/* Scrollable middle area: gallery header + thumbnails + metadata form */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {/* Gallery header: count badge + "Gallery" heading + Select All / Clear All links */}
+        {showGallery && (
+          <GalleryHeader
+            images={state.images}
+            onSelectAll={handleSelectAll}
+            onClearAll={handleClearAll}
+          />
+        )}
+
+        {/* Thumbnail grid — natural height, no cap. Scroll area handles overflow. */}
+        <ThumbnailGrid
+          scanStatus={state.scanStatus}
           images={state.images}
-          onSelectAll={handleSelectAll}
-          onClearAll={handleClearAll}
+          selected={state.selected}
+          onToggle={handleToggle}
         />
-      )}
 
-      {/* Scrollable thumbnail grid — fills remaining vertical space */}
-      <ThumbnailGrid
-        scanStatus={state.scanStatus}
-        images={state.images}
-        selected={state.selected}
-        onToggle={handleToggle}
-      />
-
-      {/* Metadata form and sticky download footer — shown when scan has results */}
-      {showGallery && (
-        <>
+        {/* Metadata form — below gallery, user scrolls down to reach it */}
+        {showGallery && (
           <NamingForm
             destination={state.destination}
             vendor={state.vendor}
@@ -998,6 +1002,12 @@ export default function App() {
             notes={state.notes}
             onChange={handleFieldChange}
           />
+        )}
+      </div>
+
+      {/* Sticky download footer and status — always visible at the bottom */}
+      {showGallery && (
+        <>
           <DownloadButton
             selected={state.selected}
             destination={state.destination}
