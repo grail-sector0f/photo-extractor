@@ -18,5 +18,17 @@ export default defineConfig({
       48: '/icon-48.png',
       128: '/icon-128.png',
     },
+    // Explicitly set the toolbar (action) icon so Chrome can pick the right
+    // resolution — 16px for standard displays, 32px for Retina/HiDPI.
+    // Without this, Chrome falls back to the general icons field and may
+    // render the toolbar button at the wrong size.
+    action: {
+      default_icon: {
+        16: '/icon-16.png',
+        32: '/icon-32.png',
+        48: '/icon-48.png',
+        128: '/icon-128.png',
+      },
+    },
   },
 });

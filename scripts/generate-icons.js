@@ -285,7 +285,9 @@ function renderIcon(size) {
 
   // --- Background (blue rounded rect) ---
   const pad = Math.max(0, Math.round(s * 0.0));  // no inset — full bleed
-  const bgCorner = Math.round(s * 0.18);
+  // Smaller corner radius at small sizes so the icon fills more of the toolbar
+  // button area. 18% looks fine at 128px but eats too much at 16px.
+  const bgCorner = Math.max(2, Math.round(s * 0.12));
   fillRoundRect(pixels, s, s, pad, pad, s - pad * 2, s - pad * 2, bgCorner, blue_r, blue_g, blue_b);
 
   // --- Camera body (white rounded rect) ---

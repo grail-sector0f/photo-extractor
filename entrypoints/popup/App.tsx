@@ -876,7 +876,7 @@ function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCoun
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           {/* Camera icon — simple bold outline camera, legible at all sizes */}
-          <svg className="w-9 h-9 text-primary" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Z"/>
           </svg>
           <h1 className="text-base font-bold font-manrope text-on-surface">Photo Extractor</h1>
