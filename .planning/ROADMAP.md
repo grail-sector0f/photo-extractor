@@ -95,8 +95,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Generate icon PNGs, update manifest and package.json, create privacy policy HTML
-- [ ] 05-02-PLAN.md — Create store listing copy, promotional tile, build ZIP package, user review checkpoint
+- [x] 05-01-PLAN.md — Generate icon PNGs, update manifest and package.json, create privacy policy HTML
+- [x] 05-02-PLAN.md — Create store listing copy, promotional tile, build ZIP package, user review checkpoint
 
 ## Progress
 

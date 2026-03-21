@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
+milestone: v1.0.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 05-02-PLAN.md tasks 1-3, awaiting Task 4 human-verify checkpoint
-last_updated: "2026-03-21T05:00:08.252Z"
+stopped_at: Completed 05-02-PLAN.md — all tasks done, Phase 5 complete
+last_updated: "2026-03-21T05:14:34.222Z"
 progress:
   total_phases: 5
   completed_phases: 5
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 ## Current Position
 
 Phase: 05 (chrome-web-store-submission-prepare-the-extension-for-public-distribution-icons-store-listing-copy-screenshots-privacy-policy-manifest-polish-and-packaged-zip-ready-to-submit) — EXECUTING
-Plan: 1 of 2
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Plan: 1 of 2
 | Phase 04 P02 | 8 | 3 tasks | 2 files |
 | Phase 05 P01 | 10 | 2 tasks | 9 files |
 | Phase 05 P02 | 15 | 3 tasks | 4 files |
+| Phase 05 P02 | 20 | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,8 @@ Recent decisions affecting current work:
 - [Phase 05-02]: Screenshot saved as .jpg by user (plan specified .png) — CWS accepts both, no action needed
 - [Phase 05-02]: ZIP excluded from git (.output/ gitignored) — reproducible via npm run zip
 - [Phase 05-02]: [GITHUB_USERNAME] placeholder retained in store-listing.md and privacy-policy.html — must be replaced before CWS submission
+- [Phase 05-02]: Brand names (Booking.com, Airbnb, Viator) replaced with generic descriptions in store-listing.md per user request during Task 4 review
+- [Phase 05-02]: Promo tile regenerated with Inter font (Google Fonts) for correct text rendering — original used system font stack which rendered differently across machines
 
 ### Roadmap Evolution
 
@@ -118,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T05:00:08.250Z
-Stopped at: Completed 05-02-PLAN.md tasks 1-3, awaiting Task 4 human-verify checkpoint
+Last session: 2026-03-21T05:14:34.220Z
+Stopped at: Completed 05-02-PLAN.md — all tasks done, Phase 5 complete
 Resume file: None
