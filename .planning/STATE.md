@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-21T01:57:37.869Z"
+stopped_at: "Checkpoint reached: Task 3 human-verify in 04-02-PLAN.md"
+last_updated: "2026-03-21T02:00:43.706Z"
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -53,6 +53,7 @@ Plan: 1 of 2
 | Phase 03-popup-and-naming P02 | 5 | 1 task | 2 files |
 | Phase 03-popup-and-naming P03 | 45 | 2 tasks | 5 files |
 | Phase 04 P01 | 3 | 1 tasks | 2 files |
+| Phase 04 P02 | 8 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 04-01]: Viator h=-1 is intentional per Viator Partner API (unconstrained height), not a bug
 - [Phase 04-01]: GetYourGuide is pass-through stub — resize params unconfirmed, TODO left for DevTools audit
 - [Phase 04-01]: Fastly IO omitted — no unique domain pattern, generic w/h params create false-positive risk
+- [Phase 04]: Use upscaledUrl === url identity check as fast path in runDownloads — avoids try/catch overhead for non-CDN images
+- [Phase 04]: CDN rewrite applied at download time only — thumbnails in popup grid remain at original extracted URLs
 
 ### Roadmap Evolution
 
@@ -105,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T01:57:37.867Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-21T02:00:39.265Z
+Stopped at: Checkpoint reached: Task 3 human-verify in 04-02-PLAN.md
 Resume file: None
