@@ -32,7 +32,7 @@ import { rewriteUrlForMaxResolution } from '../../lib/cdnRewrite';
 
 // ─── State Types ──────────────────────────────────────────────────────────────
 
-type ScanStatus = 'idle' | 'scanning' | 'done' | 'timeout';
+type ScanStatus = 'idle' | 'scanning' | 'done' | 'timeout' | 'restricted';
 type DownloadStatus = 'idle' | 'downloading' | 'success' | 'partial' | 'error';
 
 interface PopupState {
@@ -61,6 +61,7 @@ type Action =
   | { type: 'SCAN_RESULT'; payload: { images: ImageResult[]; blobCount: number } }
   | { type: 'IMAGE_FOUND'; payload: ImageResult }
   | { type: 'SCAN_TIMEOUT' }
+  | { type: 'SCAN_RESTRICTED' }
   | { type: 'TOGGLE_SELECT'; url: string }
   | { type: 'SELECT_ALL' }
   | { type: 'CLEAR_ALL' }
@@ -130,6 +131,9 @@ export function popupReducer(state: PopupState, action: Action): PopupState {
 
     case 'SCAN_TIMEOUT':
       return { ...state, scanStatus: 'timeout' };
+
+    case 'SCAN_RESTRICTED':
+      return { ...state, scanStatus: 'restricted' };
 
     case 'TOGGLE_SELECT': {
       const newSelected = new Set(state.selected);
@@ -242,6 +246,24 @@ async function startScan(dispatch: React.Dispatch<Action>): Promise<void> {
   if (!tab?.id) {
     // No active tab (e.g., popup opened from chrome://extensions). Show timeout.
     dispatch({ type: 'SCAN_TIMEOUT' });
+    return;
+  }
+
+  // Detect restricted pages where content scripts cannot run.
+  // chrome://newtab, about:blank, chrome:// pages, and the Chrome Web Store all
+  // block content script injection. Check the URL scheme before attempting to connect.
+  const tabUrl = tab.url ?? '';
+  const isRestrictedPage =
+    tabUrl === '' ||
+    tabUrl === 'about:blank' ||
+    tabUrl === 'about:newtab' ||
+    tabUrl.startsWith('chrome://') ||
+    tabUrl.startsWith('chrome-extension://') ||
+    tabUrl.startsWith('edge://') ||
+    tabUrl.startsWith('about:');
+
+  if (isRestrictedPage) {
+    dispatch({ type: 'SCAN_RESTRICTED' });
     return;
   }
 
@@ -442,7 +464,7 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   // Loading skeleton: 9 gray animated placeholder tiles while scanning
   if (scanStatus === 'scanning') {
     return (
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="p-2 py-4">
         <p className="text-[13px] text-on-surface-variant mb-2 px-1">Scanning page...</p>
         <div className="grid grid-cols-3 gap-1">
           {Array.from({ length: 9 }).map((_, i) => (
@@ -460,7 +482,7 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   // Timeout state: content script didn't respond within 5 seconds
   if (scanStatus === 'timeout') {
     return (
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-center">
+      <div className="p-4 py-8 flex flex-col items-center justify-center text-center">
         <p className="text-[15px] font-semibold text-on-surface mb-1">No photos found</p>
         <p className="text-[13px] text-on-surface-variant">
           The page scan timed out. Try scrolling to load more images, then scan again.
@@ -469,10 +491,23 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
     );
   }
 
+  // Restricted state: the current tab is a new tab, blank page, or internal browser page
+  // where content scripts cannot run. Give the user a friendly explanation.
+  if (scanStatus === 'restricted') {
+    return (
+      <div className="p-4 py-8 flex flex-col items-center justify-center text-center">
+        <p className="text-[15px] font-semibold text-on-surface mb-1">Can&apos;t scan this page</p>
+        <p className="text-[13px] text-on-surface-variant">
+          This is a browser system page (new tab or blank page). Navigate to a travel website and try again.
+        </p>
+      </div>
+    );
+  }
+
   // Empty state: scan completed but found no images
   if (scanStatus === 'done' && images.length === 0) {
     return (
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-center">
+      <div className="p-4 py-8 flex flex-col items-center justify-center text-center">
         <p className="text-[15px] font-semibold text-on-surface mb-1">No photos found</p>
         <p className="text-[13px] text-on-surface-variant">
           This page doesn&apos;t have any extractable images. Try scrolling to load more, then
@@ -485,15 +520,17 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
   // Idle state: prompt to scan
   if (scanStatus === 'idle') {
     return (
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-center">
+      <div className="p-4 py-8 flex flex-col items-center justify-center text-center">
         <p className="text-[13px] text-on-surface-variant">Click &quot;Scan Page&quot; to find images.</p>
       </div>
     );
   }
 
-  // Populated state: show all found images in a 3-column grid
+  // Populated state: show all found images in a 3-column grid.
+  // max-h-[210px] caps the gallery at ~2.5 rows so the metadata form is always visible below.
+  // overflow-y-auto allows scrolling through additional images without hiding the form.
   return (
-    <div className="flex-1 overflow-y-auto p-2">
+    <div className="overflow-y-auto p-2" style={{ maxHeight: '210px' }}>
       <div className="grid grid-cols-3 gap-1">
         {images.map((image) => (
           // Key by URL, not index — prevents flicker when images stream in via IMAGE_FOUND
@@ -811,7 +848,7 @@ function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCoun
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           {/* Camera icon — SVG path from Material Symbols camera_enhance */}
-          <svg className="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
+          <svg className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 17.5q2.08 0 3.54-1.46T17 12.5q0-2.08-1.46-3.54T12 7.5q-2.08 0-3.54 1.46T7 12.5q0 2.08 1.46 3.54T12 17.5Zm0-2q-1.25 0-2.125-.875T9 12.5q0-1.25.875-2.125T12 9.5q1.25 0 2.125.875T15 12.5q0 1.25-.875 2.125T12 15.5ZM4 21q-.825 0-1.412-.587T2 19V6q0-.825.587-1.412T4 4h3.15L9 2h6l1.85 2H20q.825 0 1.413.587T22 6v13q0 .825-.587 1.413T20 21H4Z"/>
           </svg>
           <h1 className="text-base font-bold font-manrope text-on-surface">Photo Extractor</h1>
@@ -894,8 +931,9 @@ export default function App() {
 
   return (
     // Fixed 360px width per UI-SPEC. maxHeight 600px is Chrome's popup viewport limit.
+    // overflow-y-auto on the root lets the whole popup scroll when content exceeds 600px.
     // font-inter is the default body font; Manrope is applied selectively to headings and buttons.
-    <div className="w-[360px] flex flex-col font-inter" style={{ maxHeight: '600px' }}>
+    <div className="w-[360px] flex flex-col font-inter overflow-y-auto" style={{ maxHeight: '600px' }}>
       {/* Sticky header: camera icon, title, and Scan Page button */}
       <PopupHeader
         scanStatus={state.scanStatus}
