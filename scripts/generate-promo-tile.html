@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generate Promo Tile</title></head>
+<body>
+<h1>Promotional Tile Generator (440x280)</h1>
+<canvas id="tile" width="440" height="280" style="border:1px solid #ccc"></canvas>
+<br>
+<button id="download" style="padding:8px 16px;margin-top:8px">Download promo-tile-440x280.png</button>
+<script>
+const canvas = document.getElementById('tile');
+const ctx = canvas.getContext('2d');
+const W = 440, H = 280;
+
+// Blue background
+ctx.fillStyle = '#2563EB';
+ctx.fillRect(0, 0, W, H);
+
+// Draw camera icon centered, ~80px tall
+const iconSize = 80;
+const ix = (W - iconSize) / 2;
+const iy = 50;
+
+function drawCameraIcon(ctx, x, y, size) {
+  const s = size;
+  // Camera body
+  ctx.fillStyle = '#FFFFFF';
+  const bw = s * 0.62;
+  const bh = s * 0.42;
+  const bx = x + (s - bw) / 2;
+  const by = y + s * 0.34;
+  const br = Math.round(s * 0.08);
+  ctx.beginPath();
+  ctx.moveTo(bx + br, by);
+  ctx.lineTo(bx + bw - br, by);
+  ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
+  ctx.lineTo(bx + bw, by + bh - br);
+  ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
+  ctx.lineTo(bx + br, by + bh);
+  ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
+  ctx.lineTo(bx, by + br);
+  ctx.quadraticCurveTo(bx, by, bx + br, by);
+  ctx.closePath();
+  ctx.fill();
+
+  // Viewfinder bump
+  const vw = s * 0.22;
+  const vh = s * 0.10;
+  const vx = x + (s - vw) / 2;
+  const vy = by - vh + 1;
+  ctx.fillRect(Math.round(vx), Math.round(vy), Math.round(vw), Math.round(vh + 1));
+
+  // Lens (blue circle)
+  ctx.fillStyle = '#2563EB';
+  const lensR = s * 0.13;
+  const lensX = x + s / 2;
+  const lensY = by + bh / 2 + s * 0.02;
+  ctx.beginPath();
+  ctx.arc(lensX, lensY, lensR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Lens highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.arc(lensX - lensR * 0.3, lensY - lensR * 0.3, lensR * 0.25, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+drawCameraIcon(ctx, ix, iy, iconSize);
+
+// Extension name
+ctx.fillStyle = '#FFFFFF';
+ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif';
+ctx.textAlign = 'center';
+ctx.fillText('Photo Extractor', W / 2, iy + iconSize + 40);
+
+// Tagline
+ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+ctx.font = '14px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif';
+ctx.fillText('Save photos with structured names', W / 2, iy + iconSize + 65);
+
+document.getElementById('download').onclick = () => {
+  canvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'promo-tile-440x280.png';
+    a.click();
+  });
+};
+</script>
+</body>
+</html>
