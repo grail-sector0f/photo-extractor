@@ -4,7 +4,7 @@
  * These functions are used by the popup to construct the basename and extension
  * for each download before calling triggerDownload(url, basename, ext).
  *
- * Filename format: destination_vendor_category[_notes]
+ * Filename format: destination_vendor_category[_year][_notes]
  * (the collision-safe index suffix is added later by buildSafeFilename in download.ts)
  *
  * Character normalization is intentionally conservative because Tern Travel's
@@ -43,35 +43,50 @@ export function normalizeField(value: string): string {
 
 /**
  * Build the filename basename (without extension or collision suffix) from the
- * four naming form fields.
+ * five naming form fields.
  *
  * The three required fields (destination, vendor, category) are always included.
- * The optional notes field is only appended when it contains non-whitespace content.
+ * Year is inserted between category and notes — both optional, omitted when blank.
  * All fields are normalized via normalizeField() before joining.
  *
  * Output format:  destination_vendor_category
- *            or:  destination_vendor_category_notes (when notes is provided)
+ *            or:  destination_vendor_category_year          (year provided, no notes)
+ *            or:  destination_vendor_category_notes         (no year, notes provided)
+ *            or:  destination_vendor_category_year_notes    (both provided)
+ *
+ * Note: normalizeField strips non-[a-z0-9-] characters, so a year like "2025"
+ * passes through unchanged (digits survive). Letters in a year value are also
+ * preserved (e.g., "2025a" → "2025a").
  *
  * @param destination - Where the image was taken (e.g., "Bali")
  * @param vendor      - Property or vendor name (e.g., "Four Seasons")
  * @param category    - Image category (e.g., "pool", "room", "lobby")
+ * @param year        - Optional travel year (e.g., "2025") — omitted if blank
  * @param notes       - Optional free-text tag (e.g., "sunset view") — omitted if blank
  * @returns           - Underscore-joined basename ready for triggerDownload()
  *
  * @example
- *   buildBasename("Bali", "Four Seasons", "Pool")              // → "bali_four-seasons_pool"
- *   buildBasename("bali", "four-seasons", "pool", "sunset")    // → "bali_four-seasons_pool_sunset"
- *   buildBasename("bali", "four-seasons", "pool", "")          // → "bali_four-seasons_pool"
- *   buildBasename("bali", "four-seasons", "pool", "   ")       // → "bali_four-seasons_pool"
+ *   buildBasename("Bali", "Four Seasons", "Pool")                      // → "bali_four-seasons_pool"
+ *   buildBasename("bali", "four-seasons", "pool", "2025")              // → "bali_four-seasons_pool_2025"
+ *   buildBasename("bali", "four-seasons", "pool", "2025", "sunset")    // → "bali_four-seasons_pool_2025_sunset"
+ *   buildBasename("bali", "four-seasons", "pool", "", "sunset")        // → "bali_four-seasons_pool_sunset"
+ *   buildBasename("bali", "four-seasons", "pool", undefined, "sunset") // → "bali_four-seasons_pool_sunset"
  */
 export function buildBasename(
   destination: string,
   vendor: string,
   category: string,
+  year?: string,
   notes?: string,
 ): string {
   // Start with the three required fields, each normalized
   const parts = [destination, vendor, category].map(normalizeField);
+
+  // Append year only if it has actual content after trimming
+  // (empty string and whitespace-only year values are omitted)
+  if (year && year.trim()) {
+    parts.push(normalizeField(year));
+  }
 
   // Append notes only if it has actual content after trimming
   // (empty string and whitespace-only notes are omitted)
