@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-21T01:31:25.952Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-21T01:57:37.869Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 9
+  completed_plans: 8
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Jennifer can grab any photo she sees while browsing travel sites and have it saved, named, and ready to drop into a tern.travel itinerary without friction.
-**Current focus:** Phase 03 — popup-and-naming
+**Current focus:** Phase 04 — cdn-url-upscaling-detect-cdn-image-url-patterns-booking-com-airbnb-cloudinary-etc-and-rewrite-urls-to-request-the-highest-available-resolution-before-downloading
 
 ## Current Position
 
-Phase: 03 (popup-and-naming) — COMPLETE
-Plan: 3 of 3 (all plans complete)
+Phase: 04 (cdn-url-upscaling-detect-cdn-image-url-patterns-booking-com-airbnb-cloudinary-etc-and-rewrite-urls-to-request-the-highest-available-resolution-before-downloading) — EXECUTING
+Plan: 1 of 2
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Plan: 3 of 3 (all plans complete)
 | Phase 03-popup-and-naming P01 | 2 | 2 tasks | 3 files |
 | Phase 03-popup-and-naming P02 | 5 | 1 task | 2 files |
 | Phase 03-popup-and-naming P03 | 45 | 2 tasks | 5 files |
+| Phase 04 P01 | 3 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,10 @@ Recent decisions affecting current work:
 - [Phase 03-03]: Pre-number all basenames before Promise.allSettled to prevent parallel download race condition
 - [Phase 03-03]: Lazy-load fallback order: srcset > data-srcset > img.src > data-src/data-lazy — covers booking.com and Next.js sites
 - [Phase 03-03]: Use img.src (DOM property, absolute) not getAttribute('src') (raw, may be relative)
+- [Phase 04-01]: Imgix guard uses .endsWith('.imgix.net') with leading dot to prevent notimgix.net false-positive
+- [Phase 04-01]: Viator h=-1 is intentional per Viator Partner API (unconstrained height), not a bug
+- [Phase 04-01]: GetYourGuide is pass-through stub — resize params unconfirmed, TODO left for DevTools audit
+- [Phase 04-01]: Fastly IO omitted — no unique domain pattern, generic w/h params create false-positive risk
 
 ### Roadmap Evolution
 
@@ -100,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T01:31:25.944Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-cdn-url-upscaling-detect-cdn-image-url-patterns-booking-com-airbnb-cloudinary-etc-and-rewrite-urls-to-request-the-highest-available-resolution-before-downloading/04-CONTEXT.md
+Last session: 2026-03-21T01:57:37.867Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

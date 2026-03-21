@@ -68,7 +68,7 @@ Plans:
 ### Phase 4: CDN URL Upscaling
 **Goal**: When Jennifer downloads photos, the extension detects known CDN URL patterns (Booking.com, Airbnb, Cloudinary, Imgix, Viator/TripAdvisor) and rewrites URLs to request the highest available resolution — so she gets full-quality images instead of thumbnail-sized versions
 **Depends on:** Phase 3
-**Requirements**: CDN-01, CDN-02, CDN-03, CDN-04, CDN-05, CDN-06, CDN-07, CDN-08, CDN-09
+**Requirements**: CDN-01, CDN-02, CDN-03, CDN-04, CDN-05, CDN-06, CDN-08, CDN-09
 **Success Criteria** (what must be TRUE):
   1. Downloading from Booking.com produces higher-resolution images than the page thumbnails
   2. Downloading from Airbnb produces higher-resolution images than the page thumbnails
@@ -91,4 +91,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 2/2 | Complete   | 2026-03-20 |
 | 2. Image Extraction | 2/2 | Complete   | 2026-03-20 |
 | 3. Popup and Naming | 3/3 | Complete   | 2026-03-20 |
-| 4. CDN URL Upscaling | 0/2 | Planned | — |
+| 4. CDN URL Upscaling | 1/2 | In Progress|  |
