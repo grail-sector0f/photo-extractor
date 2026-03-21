@@ -252,9 +252,13 @@ async function startScan(dispatch: React.Dispatch<Action>): Promise<void> {
   // Detect restricted pages where content scripts cannot run.
   // chrome://newtab, about:blank, chrome:// pages, and the Chrome Web Store all
   // block content script injection. Check the URL scheme before attempting to connect.
+  //
+  // IMPORTANT: tab.url may be undefined even on normal http/https pages if the extension
+  // doesn't have the "tabs" permission with URL access. An empty/undefined URL does NOT
+  // mean the page is restricted — it means we can't read the URL. Only block when the
+  // URL is explicitly a known restricted scheme.
   const tabUrl = tab.url ?? '';
   const isRestrictedPage =
-    tabUrl === '' ||
     tabUrl === 'about:blank' ||
     tabUrl === 'about:newtab' ||
     tabUrl.startsWith('chrome://') ||
@@ -847,9 +851,9 @@ function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCoun
     <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-md shadow-sm shadow-slate-200/50">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
-          {/* Camera icon — SVG path from Material Symbols camera_enhance */}
-          <svg className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 17.5q2.08 0 3.54-1.46T17 12.5q0-2.08-1.46-3.54T12 7.5q-2.08 0-3.54 1.46T7 12.5q0 2.08 1.46 3.54T12 17.5Zm0-2q-1.25 0-2.125-.875T9 12.5q0-1.25.875-2.125T12 9.5q1.25 0 2.125.875T15 12.5q0 1.25-.875 2.125T12 15.5ZM4 21q-.825 0-1.412-.587T2 19V6q0-.825.587-1.412T4 4h3.15L9 2h6l1.85 2H20q.825 0 1.413.587T22 6v13q0 .825-.587 1.413T20 21H4Z"/>
+          {/* Camera icon — simple bold outline camera, legible at all sizes */}
+          <svg className="w-9 h-9 text-primary" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Z"/>
           </svg>
           <h1 className="text-base font-bold font-manrope text-on-surface">Photo Extractor</h1>
         </div>
