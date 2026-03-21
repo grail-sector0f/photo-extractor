@@ -125,11 +125,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
   4. Downloaded filenames include year segment: `destination_vendor_category_year[_notes]_index.ext`
   5. Category is a locked dropdown (Landscape, Accommodation, Dining, Activities) not free text
   6. No bottom navigation bar rendered
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 999.1-01-PLAN.md — Add year parameter to buildBasename with TDD
-- [ ] 999.1-02-PLAN.md — Set up MD3 design tokens in Tailwind config and bundle Manrope/Inter WOFF2 fonts
+- [x] 999.1-02-PLAN.md — Set up MD3 design tokens in Tailwind config and bundle Manrope/Inter WOFF2 fonts
 - [ ] 999.1-03-PLAN.md — Rewrite popup UI with MD3 design system, Year field, and visual verification
 
 ### Phase 999.2: Settings view — image quality control (BACKLOG)

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 999.1-01-PLAN.md
-last_updated: "2026-03-21T16:45:38.137Z"
+stopped_at: Completed 999.1-02-PLAN.md
+last_updated: "2026-03-21T16:48:56.090Z"
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 ## Current Position
 
 Phase: 999.1 (ui-modernization-year-field) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Plan: 2 of 3
 | Phase 05 P02 | 15 | 3 tasks | 4 files |
 | Phase 05 P02 | 20 | 4 tasks | 5 files |
 | Phase 999.1 P01 | 5 | 1 tasks | 2 files |
+| Phase 999.1 P02 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,8 @@ Recent decisions affecting current work:
 - [Phase 05-02]: Brand names (Booking.com, Airbnb, Viator) replaced with generic descriptions in store-listing.md per user request during Task 4 review
 - [Phase 05-02]: Promo tile regenerated with Inter font (Google Fonts) for correct text rendering — original used system font stack which rendered differently across machines
 - [Phase 999.1-01]: year inserted as 4th parameter in buildBasename between category and notes; App.tsx call site left unchanged until Plan 03
+- [Phase 999.1]: Google Fonts CSS API used to discover current WOFF2 URLs (v15 static URLs were 404; v20 URLs fetched dynamically)
+- [Phase 999.1]: Variable weight range (400 800) used in @font-face — one WOFF2 file covers all weights for each family
 
 ### Roadmap Evolution
 
@@ -123,6 +126,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T16:45:38.135Z
-Stopped at: Completed 999.1-01-PLAN.md
+Last session: 2026-03-21T16:48:56.087Z
+Stopped at: Completed 999.1-02-PLAN.md
 Resume file: None
