@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-02-PLAN.md — Phase 04 CDN URL upscaling complete
-last_updated: "2026-03-21T03:59:10.382Z"
+stopped_at: Phase 05 context gathered
+last_updated: "2026-03-21T04:07:26.583Z"
 progress:
-  total_phases: 4
+  total_phases: 5
   completed_phases: 4
   total_plans: 9
   completed_plans: 9
@@ -96,6 +96,7 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 4 added: CDN URL upscaling — detect CDN image URL patterns (booking.com, Airbnb/Cloudinary, etc.) and rewrite URLs to request the highest available resolution before downloading
+- Phase 5 added: Chrome Web Store Submission — prepare the extension for public distribution: icons, store listing copy, screenshots, privacy policy, manifest polish, and packaged ZIP ready to submit
 
 ### Pending Todos
 
@@ -109,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T03:54:50.872Z
-Stopped at: Completed 04-02-PLAN.md — Phase 04 CDN URL upscaling complete
-Resume file: None
+Last session: 2026-03-21T04:07:26.581Z
+Stopped at: Phase 05 context gathered
+Resume file: .planning/phases/05-chrome-web-store-submission-prepare-the-extension-for-public-distribution-icons-store-listing-copy-screenshots-privacy-policy-manifest-polish-and-packaged-zip-ready-to-submit/05-CONTEXT.md
