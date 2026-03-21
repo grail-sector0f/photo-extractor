@@ -875,9 +875,18 @@ function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCoun
     <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-md shadow-sm shadow-slate-200/50">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
-          {/* Camera icon — simple bold outline camera, legible at all sizes */}
-          <svg className="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Z"/>
+          {/* Camera + sparkle icon — matches the extension toolbar icon design */}
+          <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Blue rounded-rect background */}
+            <rect width="24" height="24" rx="5" fill="#2563EB"/>
+            {/* Camera body */}
+            <rect x="3" y="10" width="18" height="11" rx="2" fill="white"/>
+            {/* Viewfinder bump */}
+            <rect x="9" y="7" width="6" height="4" rx="1.5" fill="white"/>
+            {/* Lens circle */}
+            <circle cx="12" cy="15.5" r="3.5" fill="white"/>
+            {/* Sparkle star inside lens — 4-pointed, blue */}
+            <path d="M12 12.5 C12 12.5 12.7 14.8 15 15.5 C12.7 16.2 12 18.5 12 18.5 C12 18.5 11.3 16.2 9 15.5 C11.3 14.8 12 12.5 12 12.5Z" fill="#2563EB"/>
           </svg>
           <h1 className="text-base font-bold font-manrope text-on-surface">Photo Extractor</h1>
         </div>

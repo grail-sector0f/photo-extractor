@@ -194,61 +194,77 @@ function fillCircle(pixels, width, height, cx, cy, radius, r, g, b, a = 255) {
 
 /**
  * Draw a filled rounded rectangle into the RGBA pixel buffer.
- * Uses per-pixel distance to nearest corner arc for anti-aliasing.
+ *
+ * Uses a signed distance field (SDF) approach:
+ *   1. Find the nearest point on the "inner rect" (rect shrunk by cornerRadius on all sides)
+ *   2. Distance from that point → 0 inside inner rect, grows toward corners
+ *   3. edgeDist = cornerRadius - dist → positive inside, negative outside
+ *
+ * This correctly handles all pixel positions without the band/corner split bug
+ * that made interior pixels transparent when corner distances were applied globally.
  */
 function fillRoundRect(pixels, width, height, x, y, w, h, cornerRadius, r, g, b, a = 255) {
+  const cr = Math.min(cornerRadius, w / 2, h / 2);
   const x0 = Math.max(0, Math.floor(x - 1));
   const y0 = Math.max(0, Math.floor(y - 1));
   const x1 = Math.min(width,  Math.ceil(x + w + 1));
   const y1 = Math.min(height, Math.ceil(y + h + 1));
-
-  const cr = Math.min(cornerRadius, w / 2, h / 2);
-  // Corner circle centers
-  const corners = [
-    [x + cr,     y + cr],      // top-left
-    [x + w - cr, y + cr],      // top-right
-    [x + cr,     y + h - cr],  // bottom-left
-    [x + w - cr, y + h - cr],  // bottom-right
-  ];
 
   for (let py = y0; py < y1; py++) {
     for (let px = x0; px < x1; px++) {
       const cx = px + 0.5;
       const cy = py + 0.5;
 
-      // Check if point is inside the rounded rect
-      let inside = false;
-      if (cx >= x + cr && cx <= x + w - cr && cy >= y && cy <= y + h) {
-        inside = true; // horizontal middle band
-      } else if (cy >= y + cr && cy <= y + h - cr && cx >= x && cx <= x + w) {
-        inside = true; // vertical middle band
-      } else {
-        // Check corners
-        for (const [cornerX, cornerY] of corners) {
-          const dx = cx - cornerX;
-          const dy = cy - cornerY;
-          if (Math.sqrt(dx * dx + dy * dy) <= cr) {
-            inside = true;
-            break;
-          }
-        }
-      }
+      // Clamp pixel center to the inner rect (rect shrunk by cr on each side).
+      // Points inside the inner rect clamp to themselves (dist=0).
+      // Points in corner regions clamp to the nearest corner center.
+      const nearX = Math.max(x + cr, Math.min(x + w - cr, cx));
+      const nearY = Math.max(y + cr, Math.min(y + h - cr, cy));
+      const dx = cx - nearX;
+      const dy = cy - nearY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-      // Compute edge distance for anti-aliasing (simplified: distance to rect edge)
-      let edgeDist = Infinity;
-      if (cx >= x + cr && cx <= x + w - cr) {
-        edgeDist = Math.min(cy - y, y + h - cy, edgeDist);
-      }
-      if (cy >= y + cr && cy <= y + h - cr) {
-        edgeDist = Math.min(cx - x, x + w - cx, edgeDist);
-      }
-      for (const [cornerX, cornerY] of corners) {
-        const dx = cx - cornerX;
-        const dy = cy - cornerY;
-        const distToCornerCenter = Math.sqrt(dx * dx + dy * dy);
-        edgeDist = Math.min(edgeDist, cr - distToCornerCenter);
-      }
+      // Positive = inside rounded rect, negative = outside.
+      const edgeDist = cr - dist;
+      const alpha = Math.max(0, Math.min(1, edgeDist + 0.5));
+      if (alpha <= 0) continue;
 
+      const srcA = (a / 255) * alpha;
+      const i = (py * width + px) * 4;
+      const dstA = pixels[i + 3] / 255;
+      const outA = srcA + dstA * (1 - srcA);
+      if (outA > 0) {
+        pixels[i]     = Math.round((r * srcA + pixels[i]     * dstA * (1 - srcA)) / outA);
+        pixels[i + 1] = Math.round((g * srcA + pixels[i + 1] * dstA * (1 - srcA)) / outA);
+        pixels[i + 2] = Math.round((b * srcA + pixels[i + 2] * dstA * (1 - srcA)) / outA);
+        pixels[i + 3] = Math.round(outA * 255);
+      }
+    }
+  }
+}
+
+/**
+ * Draw a 4-pointed sparkle star (like the auto_awesome / sparkle icon).
+ *
+ * Uses polar coordinates: r(θ) = outerR * |cos(2θ)|^power
+ * power=1 → moderate tips; power=2 → sharp diamond-like tips.
+ * The star has tips at 0°, 90°, 180°, 270° and deepest concavity at 45° intervals.
+ */
+function fillStar(pixels, width, height, cx, cy, outerR, power, r, g, b, a = 255) {
+  const x0 = Math.max(0, Math.floor(cx - outerR - 1));
+  const y0 = Math.max(0, Math.floor(cy - outerR - 1));
+  const x1 = Math.min(width,  Math.ceil(cx + outerR + 1));
+  const y1 = Math.min(height, Math.ceil(cy + outerR + 1));
+
+  for (let py = y0; py < y1; py++) {
+    for (let px = x0; px < x1; px++) {
+      const dx = px + 0.5 - cx;
+      const dy = py + 0.5 - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const theta = Math.atan2(dy, dx);
+      // Radius of the star boundary at this angle
+      const starR = outerR * Math.pow(Math.abs(Math.cos(2 * theta)), power);
+      const edgeDist = starR - dist;
       const alpha = Math.max(0, Math.min(1, edgeDist + 0.5));
       if (alpha <= 0) continue;
 
@@ -269,12 +285,15 @@ function fillRoundRect(pixels, width, height, x, y, w, h, cornerRadius, r, g, b,
 /**
  * Render the camera icon at the given size and return a raw RGBA Uint8Array.
  *
- * Design proportions (all relative to icon size `s`):
- *   - Background: blue rounded rect, inset by `pad` px, corner radius ~18% of s
- *   - Camera body: white rounded rect, width=62%, height=42%, top at y=34%
- *   - Viewfinder bump: white rect, width=22%, height=10%, sits above camera body
- *   - Lens: blue circle, radius=13%, centered horizontally, vertically centered in body
- *   - Lens highlight: small white circle (sizes >= 32 only)
+ * Design (matches the high-fidelity mockup):
+ *   - Background: blue rounded rect (22% corner radius)
+ *   - Camera body: white rounded rect, wide and centered in lower ~55% of icon
+ *   - Viewfinder bump: white rounded rect, centered above camera body top edge
+ *   - Lens circle: white filled circle, centered in camera body
+ *   - Sparkle star: blue 4-pointed star inside lens circle (32px+ only)
+ *
+ * At 16px the star is omitted (too small to render cleanly); a plain white
+ * lens circle is used instead to keep the shape legible.
  */
 function renderIcon(size) {
   const s = size;
@@ -283,40 +302,39 @@ function renderIcon(size) {
   const [blue_r, blue_g, blue_b] = hexToRgb('#2563EB');
   const [white_r, white_g, white_b] = [255, 255, 255];
 
-  // --- Background (blue rounded rect) ---
-  const pad = Math.max(0, Math.round(s * 0.0));  // no inset — full bleed
-  // Smaller corner radius at small sizes so the icon fills more of the toolbar
-  // button area. 18% looks fine at 128px but eats too much at 16px.
-  const bgCorner = Math.max(2, Math.round(s * 0.12));
-  fillRoundRect(pixels, s, s, pad, pad, s - pad * 2, s - pad * 2, bgCorner, blue_r, blue_g, blue_b);
+  // --- Background (blue rounded rect, full bleed) ---
+  const bgCorner = Math.round(s * 0.22);
+  fillRoundRect(pixels, s, s, 0, 0, s, s, bgCorner, blue_r, blue_g, blue_b);
 
   // --- Camera body (white rounded rect) ---
-  const bw = s * 0.62;
-  const bh = s * 0.42;
-  const bx = (s - bw) / 2;
-  const by = s * 0.34;
+  // Sits in the lower ~55% of the icon with 12% side margins
+  const bx = s * 0.12;
+  const bw = s * 0.76;
+  const bh = s * 0.44;
+  const by = s * 0.40;
   const br = Math.max(1, s * 0.08);
   fillRoundRect(pixels, s, s, bx, by, bw, bh, br, white_r, white_g, white_b);
 
-  // --- Viewfinder bump (white rect, sits above camera body) ---
-  const vw = s * 0.22;
-  const vh = s * 0.10;
+  // --- Viewfinder bump (white rounded rect, centered above camera body) ---
+  // Width ~30% of icon, height ~14%, overlaps the camera body top edge by 1px
+  const vw = s * 0.30;
+  const vh = s * 0.14;
   const vx = (s - vw) / 2;
-  const vy = by - vh + 1; // overlap bottom edge with camera body top by 1px
-  fillRect(pixels, s, vx, vy, vw, vh + 1, white_r, white_g, white_b);
+  const vy = by - vh + 1;
+  const vr = Math.max(1, s * 0.06);
+  fillRoundRect(pixels, s, s, vx, vy, vw, vh, vr, white_r, white_g, white_b);
 
-  // --- Lens (blue circle centered in camera body) ---
-  const lensR = s * 0.13;
-  const lensX = s / 2;
-  const lensY = by + bh / 2 + s * 0.02;
-  fillCircle(pixels, s, s, lensX, lensY, lensR, blue_r, blue_g, blue_b);
+  // --- Lens circle (white, centered in camera body) ---
+  const lensR = s * 0.18;
+  const lensX = s * 0.50;
+  const lensY = by + bh * 0.50;
+  fillCircle(pixels, s, s, lensX, lensY, lensR, white_r, white_g, white_b);
 
-  // --- Lens highlight (small white dot, only at 32px and above) ---
+  // --- Sparkle star (blue 4-pointed star inside lens, 32px and above only) ---
+  // power=1.5 gives moderately pointed tips matching the mockup sparkle style
   if (s >= 32) {
-    const hlR = lensR * 0.25;
-    const hlX = lensX - lensR * 0.3;
-    const hlY = lensY - lensR * 0.3;
-    fillCircle(pixels, s, s, hlX, hlY, hlR, white_r, white_g, white_b, Math.round(255 * 0.7));
+    const starR = lensR * 0.68;
+    fillStar(pixels, s, s, lensX, lensY, starR, 1.5, blue_r, blue_g, blue_b);
   }
 
   return pixels;
