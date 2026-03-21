@@ -131,22 +131,53 @@ describe('buildBasename', () => {
     expect(buildBasename('Bali', 'Four Seasons', 'Pool')).toBe('bali_four-seasons_pool');
   });
 
-  it('includes notes segment when notes is non-empty', () => {
-    expect(buildBasename('bali', 'four-seasons', 'pool', 'sunset view')).toBe(
+  it('includes notes segment when notes is non-empty (5-arg form)', () => {
+    // notes is now the 5th argument; year (4th) is omitted via undefined
+    expect(buildBasename('bali', 'four-seasons', 'pool', undefined, 'sunset view')).toBe(
       'bali_four-seasons_pool_sunset-view'
     );
   });
 
-  it('omits notes segment when notes is empty string', () => {
-    expect(buildBasename('bali', 'four-seasons', 'pool', '')).toBe('bali_four-seasons_pool');
+  it('omits notes segment when notes is empty string (5-arg form)', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', undefined, '')).toBe('bali_four-seasons_pool');
   });
 
-  it('omits notes segment when notes is whitespace-only', () => {
-    expect(buildBasename('bali', 'four-seasons', 'pool', '   ')).toBe('bali_four-seasons_pool');
+  it('omits notes segment when notes is whitespace-only (5-arg form)', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', undefined, '   ')).toBe('bali_four-seasons_pool');
   });
 
   it('omits notes segment when notes is undefined', () => {
-    expect(buildBasename('bali', 'four-seasons', 'pool', undefined)).toBe('bali_four-seasons_pool');
+    expect(buildBasename('bali', 'four-seasons', 'pool', undefined, undefined)).toBe('bali_four-seasons_pool');
+  });
+});
+
+describe('buildBasename with year', () => {
+  it('includes year segment between category and notes', () => {
+    // year only, no notes
+    expect(buildBasename('bali', 'four-seasons', 'pool', '2025')).toBe('bali_four-seasons_pool_2025');
+  });
+
+  it('includes both year and notes when both are provided', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', '2025', 'sunset view')).toBe(
+      'bali_four-seasons_pool_2025_sunset-view'
+    );
+  });
+
+  it('omits notes but keeps year when notes is empty', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', '2025', '')).toBe('bali_four-seasons_pool_2025');
+  });
+
+  it('omits year but keeps notes when year is empty string', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', '', 'sunset')).toBe('bali_four-seasons_pool_sunset');
+  });
+
+  it('omits year but keeps notes when year is undefined', () => {
+    expect(buildBasename('bali', 'four-seasons', 'pool', undefined, 'sunset')).toBe('bali_four-seasons_pool_sunset');
+  });
+
+  it('normalizes destination, vendor, category, and year fields', () => {
+    // Year "2025" survives normalizeField (digits are in [a-z0-9-])
+    expect(buildBasename('Bali', 'Four Seasons', 'Pool', '2025')).toBe('bali_four-seasons_pool_2025');
   });
 });
 
