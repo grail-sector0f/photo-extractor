@@ -32,7 +32,7 @@ import { rewriteUrlForMaxResolution } from '../../lib/cdnRewrite';
 
 // ─── State Types ──────────────────────────────────────────────────────────────
 
-type ScanStatus = 'idle' | 'scanning' | 'done' | 'timeout' | 'restricted';
+type ScanStatus = 'idle' | 'scanning' | 'done' | 'timeout' | 'restricted' | 'needs_refresh';
 type DownloadStatus = 'idle' | 'downloading' | 'success' | 'partial' | 'error';
 
 interface PopupState {
@@ -62,6 +62,7 @@ type Action =
   | { type: 'IMAGE_FOUND'; payload: ImageResult }
   | { type: 'SCAN_TIMEOUT' }
   | { type: 'SCAN_RESTRICTED' }
+  | { type: 'SCAN_NEEDS_REFRESH' }
   | { type: 'TOGGLE_SELECT'; url: string }
   | { type: 'SELECT_ALL' }
   | { type: 'CLEAR_ALL' }
@@ -134,6 +135,9 @@ export function popupReducer(state: PopupState, action: Action): PopupState {
 
     case 'SCAN_RESTRICTED':
       return { ...state, scanStatus: 'restricted' };
+
+    case 'SCAN_NEEDS_REFRESH':
+      return { ...state, scanStatus: 'needs_refresh' };
 
     case 'TOGGLE_SELECT': {
       const newSelected = new Set(state.selected);
@@ -295,10 +299,17 @@ async function startScan(dispatch: React.Dispatch<Action>): Promise<void> {
     }
   });
 
-  // If the port disconnects before SCAN_RESULT arrives (e.g., content script crashed
-  // or the tab navigated away), cancel the timer to avoid a stale SCAN_TIMEOUT dispatch.
+  // If the port disconnects before SCAN_RESULT arrives, figure out why.
+  // "Receiving end does not exist" means the content script isn't injected yet —
+  // this happens when a page was already open when the extension was installed or reloaded.
+  // In that case, tell the user to refresh the page. Any other disconnect (crash,
+  // navigation) just clears the timer and lets the 5-second timeout fire normally.
   port.onDisconnect.addListener(() => {
     clearTimeout(timer);
+    const err = chrome.runtime.lastError?.message ?? '';
+    if (err.includes('Receiving end does not exist')) {
+      dispatch({ type: 'SCAN_NEEDS_REFRESH' });
+    }
   });
 
   port.postMessage({ type: 'SCAN_PAGE' });
@@ -479,6 +490,19 @@ function ThumbnailGrid({ scanStatus, images, selected, onToggle }: ThumbnailGrid
             />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  // Needs-refresh state: content script isn't injected because the page was open before
+  // the extension was installed or reloaded. The only fix is a page refresh.
+  if (scanStatus === 'needs_refresh') {
+    return (
+      <div className="p-4 py-8 flex flex-col items-center justify-center text-center">
+        <p className="text-[15px] font-semibold text-on-surface mb-1">Refresh the page first</p>
+        <p className="text-[13px] text-on-surface-variant">
+          This tab was open before the extension loaded. Refresh the page, then scan again.
+        </p>
       </div>
     );
   }
@@ -845,7 +869,7 @@ interface PopupHeaderProps {
  * rescan if she navigates to new content or wants a fresh result.
  */
 function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCount, onScan }: PopupHeaderProps) {
-  const showScanButton = scanStatus === 'idle' || scanStatus === 'done' || scanStatus === 'timeout';
+  const showScanButton = scanStatus === 'idle' || scanStatus === 'done' || scanStatus === 'timeout' || scanStatus === 'needs_refresh';
 
   return (
     <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-md shadow-sm shadow-slate-200/50">
