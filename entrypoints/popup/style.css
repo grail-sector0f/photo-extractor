@@ -1,3 +1,24 @@
+/* Manrope — headings and labels (variable weight: 400-800)
+   Loaded from bundled WOFF2 in public/fonts/ — no CDN dependency.
+   The /fonts/ path works because WXT copies public/ to the build output root,
+   so chrome-extension://<id>/fonts/manrope-latin.woff2 resolves correctly. */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/manrope-latin.woff2') format('woff2');
+}
+
+/* Inter — body text and inputs (variable weight: 400-700) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+}
+
 /* Import Tailwind's base reset, component layer, and utility classes.
    These are processed by PostCSS + Tailwind during the WXT build.
    Any Tailwind class used in .tsx files within entrypoints/ will be included
