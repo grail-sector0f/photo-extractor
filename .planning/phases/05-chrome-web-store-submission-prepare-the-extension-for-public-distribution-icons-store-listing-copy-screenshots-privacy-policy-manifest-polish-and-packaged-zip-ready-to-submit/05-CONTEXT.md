@@ -22,14 +22,14 @@ Prepare the extension for public distribution on the Chrome Web Store: create re
 
 ### Store listing copy
 - **Name:** Photo Extractor (keep — clear, descriptive, no keyword stuffing)
-- **Short description (132 chars max):** "Save travel site photos with structured filenames. Extracts images that block right-click saving. For travel advisors and researchers."
+- **Short description (132 chars max):** "Save photos with structured names." (34 chars — user-approved final copy)
 - **Long description:** Explain the core workflow — browse travel site, open extension, scan page, select photos, fill in destination/vendor/category, download with formatted filenames. Mention Booking.com, Airbnb, Viator, GetYourGuide support.
 - **Category:** Productivity
 - **Language:** English (US)
 
 ### Privacy policy
 - Host on GitHub Pages using a `/docs/privacy-policy.html` file in the repo
-- Content must disclose: tabs permission (to read active tab URL for form pre-fill logic), downloads permission (to save files), storage permission (to persist last-used form values). No data leaves the device.
+- Content must disclose: `downloads` permission (to save files) and `storage` permission (to persist last-used form values). No `tabs` permission in manifest — do NOT mention it. No data leaves the device.
 - URL format will be: `https://{github-username}.github.io/photo-extractor/privacy-policy.html`
 - GitHub Pages must be enabled on the repo (Settings → Pages → source: main branch /docs folder)
 
@@ -40,7 +40,7 @@ Prepare the extension for public distribution on the Chrome Web Store: create re
 
 ### Distribution scope
 - Public listing (not unlisted) — purpose is sharing with travel advisors
-- No promotional tile required for initial submission (optional 440x280 asset)
+- 440x280 promotional tile IS required (CWS blocks submission without it) — include in scope
 - Screenshots: at least 1 required (1280x800). Show the popup open on a real travel site with images scanned and a naming form filled in.
 
 ### Claude's Discretion
@@ -94,7 +94,6 @@ No external specs — requirements fully captured in decisions above.
 <deferred>
 ## Deferred Ideas
 
-- Promotional tile (440x280 store graphic) — optional for first submission, can add later
 - Localization of store listing into other languages — future
 - Post-submission version update workflow — separate phase if needed
 

@@ -40,7 +40,7 @@ created: 2026-03-21
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
 | 05-01-01 | 01 | 1 | Manifest icons | file-check | `ls public/icon-*.png \| wc -l` outputs 4 | ❌ W0 | ⬜ pending |
 | 05-01-02 | 01 | 1 | Version bump | file-check | `node -p "require('./package.json').version"` outputs `1.0.0` | ✅ | ⬜ pending |
-| 05-01-03 | 01 | 1 | Manifest description | file-check | `grep -c "Save travel site photos" .output/chrome-mv3/manifest.json` outputs 1 | ✅ build | ⬜ pending |
+| 05-01-03 | 01 | 1 | Manifest description | file-check | `grep -c "structured names" .output/chrome-mv3/manifest.json` outputs 1 | ✅ build | ⬜ pending |
 | 05-02-01 | 02 | 1 | Privacy policy file | file-check | `ls docs/privacy-policy.html` exits 0 | ❌ W0 | ⬜ pending |
 | 05-02-02 | 02 | 1 | Store listing copy | file-check | `ls docs/store-listing.md` exits 0 | ❌ W0 | ⬜ pending |
 | 05-02-03 | 02 | 1 | Promotional tile | file-check | `ls docs/store-assets/promo-tile-440x280.png` exits 0 | ❌ W0 | ⬜ pending |
