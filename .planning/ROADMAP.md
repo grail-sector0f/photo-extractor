@@ -151,11 +151,21 @@ Plans:
 - [x] 999.2-01-PLAN.md — Create settings module with storage helpers, wire into content script scan and popup download pipeline
 - [x] 999.2-02-PLAN.md — Build settings UI panel with preset buttons, toggles, gear icon navigation, and visual verification
 
-### Phase 999.3: Library view — sort saved photos by meta tags (BACKLOG)
+### Phase 999.3: Library view — sort saved photos by meta tags
 
-**Goal:** Give users a library screen to browse and sort all previously saved photos by meta tags (destination, vendor, category, year).
-**Requirements:** TBD
-**Plans:** 0 plans
+**Goal:** Add a library screen where Jennifer can browse all previously saved photos sorted by destination, vendor, category, or year. A structured download log in chrome.storage.local records each successful download with metadata fields, and a LibraryPanel component displays the log with sort controls and tag chips.
+**Depends on:** Phase 999.2
+**Requirements:** LIB-01, LIB-02, LIB-03, LIB-04, LIB-05, LIB-06, LIB-07
+**Success Criteria** (what must be TRUE):
+  1. Download log stores SavedPhotoRecord with all metadata fields to chrome.storage.local, capped at 500 records
+  2. Every successful download in runDownloads appends a record to the log
+  3. Library panel accessible via photo_library icon in popup header, with back navigation
+  4. Records display as vertical list with thumbnail, filename, and tag chips
+  5. Sort controls offer Recent (default, newest-first), Destination, Vendor, Category, Year
+  6. Empty state shows "No saved photos yet" when no records exist
+  7. Broken thumbnails show "?" placeholder (mirrors ThumbnailCard pattern)
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (promote with /gsd:review-backlog when ready)
+- [ ] 999.3-01-PLAN.md — Create library data layer (SavedPhotoRecord, loadLibrary, appendToLibrary) with TDD, wire into runDownloads
+- [ ] 999.3-02-PLAN.md — Build LibraryPanel UI with SortBar, record list, empty state, navigation, and visual verification

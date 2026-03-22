@@ -55,6 +55,16 @@
 - **SETT-07**: Skip GIFs toggle (default off) filters .gif URLs from scan results
 - **SETT-08**: Settings persist to chrome.storage.local and survive popup close/reopen
 
+### Library (Phase 999.3)
+
+- **LIB-01**: Download log stores SavedPhotoRecord (id, url, filename, destination, vendor, category, year, notes, savedAt) in chrome.storage.local under 'savedPhotos' key, capped at 500 records with LRU eviction
+- **LIB-02**: Every successful download in runDownloads appends a SavedPhotoRecord to the log
+- **LIB-03**: Library panel accessible via photo_library icon in popup header, with back navigation to main view
+- **LIB-04**: Library displays records sorted by savedAt descending (newest first) by default
+- **LIB-05**: Sort controls allow sorting by Recent, Destination, Vendor, Category, or Year
+- **LIB-06**: Empty state shows "No saved photos yet" when no records exist in the log
+- **LIB-07**: Broken thumbnail URLs show "?" placeholder (mirrors ThumbnailCard onError pattern)
+
 ## Out of Scope
 
 | Feature | Reason |
@@ -95,6 +105,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SETT-06 | Phase 999.2 | Planned |
 | SETT-07 | Phase 999.2 | Planned |
 | SETT-08 | Phase 999.2 | Planned |
+| LIB-01 | Phase 999.3 | Planned |
+| LIB-02 | Phase 999.3 | Planned |
+| LIB-03 | Phase 999.3 | Planned |
+| LIB-04 | Phase 999.3 | Planned |
+| LIB-05 | Phase 999.3 | Planned |
+| LIB-06 | Phase 999.3 | Planned |
+| LIB-07 | Phase 999.3 | Planned |
 
 **Coverage:**
 - v1 requirements: 15 total
@@ -105,6 +122,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 - Mapped to phase 999.2: 8
 - Unmapped: 0
 
+- Library requirements: 7 total
+- Mapped to phase 999.3: 7
+- Unmapped: 0
+
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-21 after Phase 999.2 planning*
+*Last updated: 2026-03-22 after Phase 999.3 planning*
