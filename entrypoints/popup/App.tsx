@@ -23,16 +23,16 @@
  * (Google Fonts CDN is inaccessible inside extension popups).
  */
 
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useState } from 'react';
 import { buildBasename, deriveExt } from '../../lib/naming';
 import type { ImageResult } from '../../lib/extract/types';
 // CDN URL rewriting -- applies at download time only. Thumbnails in the grid use
 // original extracted URLs. See lib/cdnRewrite.ts for supported CDN patterns.
 import { rewriteUrlForMaxResolution } from '../../lib/cdnRewrite';
 // Settings data layer — types, defaults, and chrome.storage helpers.
-// Plan 02 will build the UI; this plan wires settings into scan and download logic.
+// Plan 02 builds the settings UI that reads/writes via these helpers.
 import type { AppSettings } from '../../lib/settings';
-import { DEFAULT_SETTINGS, loadSettings } from '../../lib/settings';
+import { DEFAULT_SETTINGS, loadSettings, saveSettings, MIN_DIMENSION_PRESETS } from '../../lib/settings';
 
 // ─── State Types ──────────────────────────────────────────────────────────────
 
@@ -878,12 +878,14 @@ interface PopupHeaderProps {
   imageCount: number;
   blobCount: number;
   onScan: () => void;
+  // Callback to navigate to the settings panel
+  onSettings: () => void;
 }
 
 /**
  * Sticky header with backdrop blur — floats above content while scrolling.
  * Left: camera SVG icon + "Photo Extractor" in Manrope bold.
- * Right: "Scan Page" button with MD3 primary-container styling.
+ * Right: gear icon (settings) + "Scan Page" button with MD3 primary-container styling.
  *
  * Google Fonts CDN is inaccessible inside extension popups, so Material Symbols
  * web font cannot be used. Inline SVG paths from Material Symbols are used instead.
@@ -891,7 +893,7 @@ interface PopupHeaderProps {
  * The Scan Page button is visible in idle, done, and timeout states — Jennifer can
  * rescan if she navigates to new content or wants a fresh result.
  */
-function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCount, onScan }: PopupHeaderProps) {
+function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCount, onScan, onSettings }: PopupHeaderProps) {
   const showScanButton = scanStatus === 'idle' || scanStatus === 'done' || scanStatus === 'timeout' || scanStatus === 'needs_refresh';
 
   return (
@@ -913,14 +915,182 @@ function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCoun
           </svg>
           <h1 className="text-base font-bold font-manrope text-on-surface">Photo Extractor</h1>
         </div>
-        {showScanButton && (
+        {/* Right side: gear icon + scan button */}
+        <div className="flex items-center gap-2">
+          {/* Gear icon — navigates to settings panel */}
           <button
-            onClick={onScan}
-            className="px-4 py-1.5 text-sm font-medium bg-primary-container text-on-primary-container rounded-lg hover:opacity-90 transition-opacity"
+            onClick={onSettings}
+            className="p-1.5 rounded-lg hover:bg-surface-container transition-colors"
+            aria-label="Settings"
           >
-            Scan Page
+            {/* Material Symbols settings gear path */}
+            <svg className="w-5 h-5 text-on-surface-variant" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
+            </svg>
           </button>
-        )}
+          {showScanButton && (
+            <button
+              onClick={onScan}
+              className="px-4 py-1.5 text-sm font-medium bg-primary-container text-on-primary-container rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Scan Page
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Settings Components ──────────────────────────────────────────────────────
+
+/**
+ * Accessible toggle switch styled to match MD3.
+ * Uses a <button role="switch"> instead of a native checkbox so we can apply
+ * custom styling (pill track + sliding knob) without fighting browser defaults.
+ *
+ * - Checked (on): blue primary track
+ * - Unchecked (off): outline-colored track (MD3 outline grey)
+ */
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${
+        checked ? 'bg-primary' : 'bg-outline'
+      }`}
+    >
+      {/* Sliding knob — translates right when checked */}
+      <span
+        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+          checked ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  );
+}
+
+interface SettingsPanelProps {
+  settings: AppSettings;
+  // Called immediately on every change (auto-save pattern — no explicit save button)
+  onSave: (settings: AppSettings) => void;
+  onBack: () => void;
+}
+
+/**
+ * Settings panel — full-screen replacement for the main popup view.
+ * Renders a sticky header (back arrow + title) and a scrollable list of settings.
+ *
+ * Three settings:
+ *  1. Minimum image size — three preset buttons (Small/Medium/Large)
+ *  2. Skip GIFs — toggle (off by default)
+ *  3. Request higher-resolution images — toggle (on by default, CDN upscaling)
+ *
+ * Auto-save: every change calls onSave() immediately, which dispatches
+ * SETTINGS_LOADED and calls saveSettings() to persist to chrome.storage.local.
+ * No explicit save button needed.
+ *
+ * Layout follows the existing MD3 patterns used throughout the popup (NamingForm, etc.).
+ * Font classes: font-manrope for labels, font-inter for description text.
+ */
+function SettingsPanel({ settings, onSave, onBack }: SettingsPanelProps) {
+  // Local copy of settings that drives the UI. Every change is pushed up via onSave().
+  const [local, setLocal] = useState<AppSettings>(settings);
+
+  // Auto-save helper: update local state AND persist via onSave() in one call.
+  const handleChange = (newSettings: AppSettings) => {
+    setLocal(newSettings);
+    onSave(newSettings);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Sticky header: back arrow + "Settings" title */}
+      <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-md shadow-sm shadow-slate-200/50">
+        <div className="flex items-center gap-2 px-4 py-3">
+          <button
+            onClick={onBack}
+            className="p-1.5 rounded-lg hover:bg-surface-container transition-colors"
+            aria-label="Back"
+          >
+            {/* Material Symbols arrow_back path */}
+            <svg className="w-5 h-5 text-on-surface-variant" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+          </button>
+          <h1 className="text-base font-bold font-manrope text-on-surface">Settings</h1>
+        </div>
+      </div>
+
+      {/* Scrollable settings content */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+
+        {/* Section 1: Image Size Filter */}
+        <div className="px-4 py-4">
+          <p className="text-sm font-semibold font-manrope text-on-surface mb-0.5">Minimum image size</p>
+          <p className="text-xs font-inter text-on-surface-variant mb-3">Skip small images like icons and logos</p>
+
+          {/* Three preset buttons in a row */}
+          <div className="flex gap-2">
+            {MIN_DIMENSION_PRESETS.map((preset) => (
+              <button
+                key={preset.value}
+                onClick={() => handleChange({ ...local, minDimension: preset.value })}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium font-manrope transition-colors ${
+                  local.minDimension === preset.value
+                    ? 'bg-primary-container text-on-primary-container'
+                    : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                }`}
+              >
+                {preset.label}
+                {/* Pixel value displayed as a smaller subscript beneath the label */}
+                <span className="block text-xs opacity-70">{preset.value}px</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-surface-container-high mx-4" />
+
+        {/* Section 2: File Types — Skip GIFs toggle */}
+        <div className="px-4 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-semibold font-manrope text-on-surface mb-0.5">Skip GIFs</p>
+              <p className="text-xs font-inter text-on-surface-variant">
+                Hide animated GIFs and GIF icons from scan results
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={local.skipGifs}
+              onChange={(v) => handleChange({ ...local, skipGifs: v })}
+            />
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-surface-container-high mx-4" />
+
+        {/* Section 3: Image Quality — CDN upscaling toggle */}
+        {/* NOTE: label uses plain English per user decision — "CDN" term not used */}
+        <div className="px-4 py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <p className="text-sm font-semibold font-manrope text-on-surface mb-0.5">Request higher-resolution images</p>
+              <p className="text-xs font-inter text-on-surface-variant">
+                When downloading from travel sites like Airbnb and Booking.com, request the full-size photo instead of the smaller preview shown on the page
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={local.cdnUpscalingEnabled}
+              onChange={(v) => handleChange({ ...local, cdnUpscalingEnabled: v })}
+            />
+          </div>
+        </div>
+
       </div>
     </div>
   );
@@ -937,6 +1107,10 @@ function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCoun
  */
 export default function App() {
   const [state, dispatch] = useReducer(popupReducer, initialState);
+
+  // View state controls which panel is shown: 'main' (default) or 'settings'.
+  // This is local UI state — not persisted. The popup always opens on the main view.
+  const [view, setView] = useState<'main' | 'settings'>('main');
 
   // Pre-fill form fields and load settings in a single mount effect.
   // Using loadSettings() (which reads chrome.storage.local) alongside the existing
@@ -997,6 +1171,24 @@ export default function App() {
 
   const showGallery = state.scanStatus === 'done' && state.images.length > 0;
 
+  // When the settings view is active, render SettingsPanel in place of the main view.
+  // Settings changes are dispatched as SETTINGS_LOADED so the reducer updates state.settings,
+  // and persisted immediately via saveSettings() to chrome.storage.local.
+  if (view === 'settings') {
+    return (
+      <div className="w-[360px] flex flex-col font-inter" style={{ height: '600px' }}>
+        <SettingsPanel
+          settings={state.settings}
+          onSave={(newSettings) => {
+            dispatch({ type: 'SETTINGS_LOADED', settings: newSettings });
+            saveSettings(newSettings);
+          }}
+          onBack={() => setView('main')}
+        />
+      </div>
+    );
+  }
+
   return (
     // Fixed 360px × 600px. Chrome's popup viewport limit is 600px tall.
     // Header is sticky at the top. Download footer is sticky at the bottom.
@@ -1005,12 +1197,13 @@ export default function App() {
     // min-h-0 on the scroll area is required in flex columns to allow shrinking below content size.
     // font-inter is the default body font; Manrope is applied selectively to headings and buttons.
     <div className="w-[360px] flex flex-col font-inter" style={{ height: '600px' }}>
-      {/* Sticky header: camera icon, title, and Scan Page button */}
+      {/* Sticky header: camera icon, title, gear icon (settings), and Scan Page button */}
       <PopupHeader
         scanStatus={state.scanStatus}
         imageCount={state.images.length}
         blobCount={state.blobCount}
         onScan={handleScan}
+        onSettings={() => setView('settings')}
       />
 
       {/* Scrollable middle area: gallery header + thumbnails + metadata form */}
