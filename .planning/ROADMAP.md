@@ -101,7 +101,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -132,14 +132,24 @@ Plans:
 - [x] 999.1-02-PLAN.md — Set up MD3 design tokens in Tailwind config and bundle Manrope/Inter WOFF2 fonts
 - [x] 999.1-03-PLAN.md — Rewrite popup UI with MD3 design system, Year field, and visual verification
 
-### Phase 999.2: Settings view — image quality control (BACKLOG)
+### Phase 999.2: Settings view — image quality control
 
-**Goal:** Give users a settings screen to control image quality scanning — e.g. minimum resolution threshold, file type filtering, CDN upscaling preferences.
-**Requirements:** TBD
-**Plans:** 0 plans
+**Goal:** Give users a settings screen to control image quality scanning -- minimum resolution threshold (preset buttons), file type filtering (Skip GIFs toggle), and CDN upscaling preferences (on/off toggle with plain-English label).
+**Depends on:** Phase 999.1
+**Requirements:** SETT-01, SETT-02, SETT-03, SETT-04, SETT-05, SETT-06, SETT-07, SETT-08
+**Success Criteria** (what must be TRUE):
+  1. Settings module exists with AppSettings type, defaults (minDimension=150, skipGifs=false, cdnUpscalingEnabled=true), and chrome.storage.local persistence
+  2. Min resolution uses preset buttons (Small 50px, Medium 150px, Large 300px) with Medium as default
+  3. Skip GIFs toggle (off by default) filters .gif URLs from scan results
+  4. CDN upscaling toggle (on by default) with plain-English label -- no "CDN" jargon
+  5. Settings panel accessible via gear icon in popup header, with back navigation
+  6. Settings persist across popup close/reopen cycles
+  7. Content script uses configurable minDimension from scan message (no hardcoded constants)
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (promote with /gsd:review-backlog when ready)
+- [ ] 999.2-01-PLAN.md — Create settings module with storage helpers, wire into content script scan and popup download pipeline
+- [ ] 999.2-02-PLAN.md — Build settings UI panel with preset buttons, toggles, gear icon navigation, and visual verification
 
 ### Phase 999.3: Library view — sort saved photos by meta tags (BACKLOG)
 
