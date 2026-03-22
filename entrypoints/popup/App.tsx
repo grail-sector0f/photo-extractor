@@ -35,7 +35,8 @@ import type { AppSettings } from '../../lib/settings';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, MIN_DIMENSION_PRESETS } from '../../lib/settings';
 // Library data layer — append a record after each successful download so the
 // Library view has data to display. Only fires on success (not on error/failure).
-import { appendToLibrary } from '../../lib/library';
+import { loadLibrary, appendToLibrary } from '../../lib/library';
+import type { SavedPhotoRecord } from '../../lib/library';
 
 // ─── State Types ──────────────────────────────────────────────────────────────
 
@@ -900,6 +901,8 @@ interface PopupHeaderProps {
   onScan: () => void;
   // Callback to navigate to the settings panel
   onSettings: () => void;
+  // Callback to navigate to the library panel
+  onLibrary: () => void;
 }
 
 /**
@@ -913,7 +916,7 @@ interface PopupHeaderProps {
  * The Scan Page button is visible in idle, done, and timeout states — Jennifer can
  * rescan if she navigates to new content or wants a fresh result.
  */
-function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCount, onScan, onSettings }: PopupHeaderProps) {
+function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCount, onScan, onSettings, onLibrary }: PopupHeaderProps) {
   const showScanButton = scanStatus === 'idle' || scanStatus === 'done' || scanStatus === 'timeout' || scanStatus === 'needs_refresh';
 
   return (
@@ -935,8 +938,18 @@ function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCoun
           </svg>
           <h1 className="text-base font-bold font-manrope text-on-surface">Photo Extractor</h1>
         </div>
-        {/* Right side: gear icon + scan button */}
+        {/* Right side: library icon + gear icon + scan button */}
         <div className="flex items-center gap-2">
+          {/* Library icon — navigates to library panel (photo_library Material Symbol path) */}
+          <button
+            onClick={onLibrary}
+            className="p-1.5 rounded-lg hover:bg-surface-container transition-colors"
+            aria-label="Library"
+          >
+            <svg className="w-5 h-5 text-on-surface-variant" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z"/>
+            </svg>
+          </button>
           {/* Gear icon — navigates to settings panel */}
           <button
             onClick={onSettings}
@@ -1116,6 +1129,235 @@ function SettingsPanel({ settings, onSave, onBack }: SettingsPanelProps) {
   );
 }
 
+// ─── Library Components ───────────────────────────────────────────────────────
+
+/**
+ * Sort comparator for library records. Exported so unit tests can drive it
+ * directly without rendering React.
+ *
+ * - savedAt: descending (newest first) — ISO 8601 strings compare correctly
+ *   with localeCompare because their lexicographic and chronological orders match.
+ * - All other fields: ascending alphabetical — destination, vendor, category, year.
+ */
+export function compareRecords(
+  a: SavedPhotoRecord,
+  b: SavedPhotoRecord,
+  sortBy: 'savedAt' | 'destination' | 'vendor' | 'category' | 'year',
+): number {
+  if (sortBy === 'savedAt') return b.savedAt.localeCompare(a.savedAt); // newest first
+  return a[sortBy].localeCompare(b[sortBy]); // alphabetical ascending
+}
+
+interface SortBarProps {
+  sortBy: 'savedAt' | 'destination' | 'vendor' | 'category' | 'year';
+  onSortChange: (field: 'savedAt' | 'destination' | 'vendor' | 'category' | 'year') => void;
+}
+
+// All five sort options the user can choose from. Defined at module level (not
+// inside the component) so it's not recreated on every render.
+const SORT_OPTIONS: Array<{ label: string; value: SortBarProps['sortBy'] }> = [
+  { label: 'Recent', value: 'savedAt' },
+  { label: 'Destination', value: 'destination' },
+  { label: 'Vendor', value: 'vendor' },
+  { label: 'Category', value: 'category' },
+  { label: 'Year', value: 'year' },
+];
+
+/**
+ * Horizontal row of sort-by buttons. Active button uses primary-container styling
+ * (same pattern as the size preset buttons in SettingsPanel).
+ * Container is overflow-x-auto so buttons scroll horizontally if they overflow the 360px width.
+ */
+function SortBar({ sortBy, onSortChange }: SortBarProps) {
+  return (
+    <div className="flex gap-2 px-4 py-3 overflow-x-auto">
+      {SORT_OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onSortChange(opt.value)}
+          className={`py-1.5 px-3 rounded-lg text-xs font-medium font-manrope transition-colors whitespace-nowrap ${
+            sortBy === opt.value
+              ? 'bg-primary-container text-on-primary-container'
+              : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Single record row: 56px thumbnail (with broken-image "?" fallback) + filename
+ * truncated to one line + tag chips for destination, vendor, category, year + timestamp.
+ *
+ * Layout mirrors LibraryRecord spec in UI-SPEC.md.
+ * Broken-image fallback pattern mirrors ThumbnailCard in the main view.
+ */
+function LibraryRecord({ record }: { record: SavedPhotoRecord }) {
+  return (
+    <div className="flex items-start gap-3 px-4 py-3 border-b border-outline-variant">
+      {/* Thumbnail with broken-image fallback */}
+      <div className="relative flex-shrink-0">
+        <img
+          src={record.url}
+          alt={record.filename}
+          className="w-14 h-14 rounded-lg object-cover"
+          onError={(e) => {
+            // When the image URL is stale or unreachable, hide the broken img
+            // and show the "?" placeholder div next to it.
+            const img = e.currentTarget;
+            img.style.display = 'none';
+            const placeholder = img.nextElementSibling as HTMLElement | null;
+            if (placeholder) placeholder.style.display = 'flex';
+          }}
+        />
+        {/* Hidden by default; revealed by onError handler above */}
+        <div className="hidden w-14 h-14 rounded-lg bg-surface-container-high items-center justify-center text-on-surface-variant text-lg">
+          ?
+        </div>
+      </div>
+
+      {/* Text content: filename + tag chips + timestamp */}
+      <div className="flex-1 min-w-0">
+        {/* Filename — truncated with ellipsis if it overflows the available width */}
+        <p className="text-[13px] font-inter text-on-surface truncate">{record.filename}</p>
+
+        {/* Tag chips — each metadata field gets its own pill badge */}
+        <div className="flex flex-wrap gap-1 mt-1">
+          {record.destination && (
+            <span className="px-2 py-0.5 text-xs font-inter bg-secondary-fixed text-on-secondary-container rounded-full">
+              {record.destination}
+            </span>
+          )}
+          {record.vendor && (
+            <span className="px-2 py-0.5 text-xs font-inter bg-secondary-fixed text-on-secondary-container rounded-full">
+              {record.vendor}
+            </span>
+          )}
+          {record.category && (
+            <span className="px-2 py-0.5 text-xs font-inter bg-secondary-fixed text-on-secondary-container rounded-full">
+              {record.category}
+            </span>
+          )}
+          {record.year && (
+            <span className="px-2 py-0.5 text-xs font-inter bg-secondary-fixed text-on-secondary-container rounded-full">
+              {record.year}
+            </span>
+          )}
+        </div>
+
+        {/* Timestamp — first 10 chars of ISO string gives "YYYY-MM-DD" */}
+        <p className="text-[11px] text-on-surface-variant mt-1">{record.savedAt.slice(0, 10)}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Empty state shown when the library has no records yet (first use, or all evicted).
+ * Mirrors the ThumbnailGrid empty state pattern for visual consistency.
+ */
+function EmptyLibraryState() {
+  return (
+    <div className="p-4 py-8 flex flex-col items-center justify-center text-center">
+      <p className="text-[15px] font-semibold text-on-surface mb-1">No saved photos yet</p>
+      <p className="text-[13px] text-on-surface-variant">Photos you download will appear here.</p>
+    </div>
+  );
+}
+
+/**
+ * Loading skeleton shown while loadLibrary() is in flight.
+ * 3 rows to match the expected record count for a brief first load.
+ * Uses animate-pulse on gray placeholder shapes — same pattern as ThumbnailGrid scanning state.
+ */
+function LibrarySkeletons() {
+  return (
+    <>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex items-start gap-3 px-4 py-3 border-b border-outline-variant">
+          {/* Thumbnail placeholder */}
+          <div className="w-14 h-14 rounded-lg bg-surface-container animate-pulse flex-shrink-0" />
+          {/* Text placeholders */}
+          <div className="flex-1 space-y-2">
+            <div className="h-3 bg-surface-container-high rounded animate-pulse" />
+            <div className="h-3 bg-surface-container-high rounded animate-pulse w-2/3" />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+interface LibraryPanelProps {
+  onBack: () => void;
+}
+
+/**
+ * Full-panel library view. Mirrors the SettingsPanel structure:
+ * sticky header (back arrow + title) + scrollable content area.
+ *
+ * On mount, loads all saved records from chrome.storage.local.
+ * Client-side sort via compareRecords — no re-fetch needed on sort change.
+ */
+function LibraryPanel({ onBack }: LibraryPanelProps) {
+  const [records, setRecords] = useState<SavedPhotoRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'savedAt' | 'destination' | 'vendor' | 'category' | 'year'>('savedAt');
+
+  // Load records once on mount. No dependency array re-fetch — the panel
+  // is unmounted and remounted when navigating away, so a re-mount always
+  // fetches fresh data.
+  useEffect(() => {
+    loadLibrary().then((r) => {
+      setRecords(r);
+      setLoading(false);
+    });
+  }, []);
+
+  // Client-side sort — spread to avoid mutating state in place
+  const sorted = [...records].sort((a, b) => compareRecords(a, b, sortBy));
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Sticky header: back arrow + "Library" title */}
+      <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-md shadow-sm shadow-slate-200/50">
+        <div className="flex items-center gap-2 px-4 py-3">
+          <button
+            onClick={onBack}
+            className="p-1.5 rounded-lg hover:bg-surface-container transition-colors"
+            aria-label="Back"
+          >
+            {/* Material Symbols arrow_back path */}
+            <svg className="w-5 h-5 text-on-surface-variant" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+          </button>
+          <h1 className="text-base font-semibold font-manrope text-on-surface">Library</h1>
+        </div>
+      </div>
+
+      {/* Sort controls — always visible, even during loading */}
+      <SortBar sortBy={sortBy} onSortChange={setSortBy} />
+
+      {/* Scrollable record list */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {loading ? (
+          <LibrarySkeletons />
+        ) : records.length === 0 ? (
+          <EmptyLibraryState />
+        ) : (
+          sorted.map((record) => (
+            <LibraryRecord key={record.id} record={record} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── App (Main Component) ─────────────────────────────────────────────────────
 
 /**
@@ -1128,9 +1370,9 @@ function SettingsPanel({ settings, onSave, onBack }: SettingsPanelProps) {
 export default function App() {
   const [state, dispatch] = useReducer(popupReducer, initialState);
 
-  // View state controls which panel is shown: 'main' (default) or 'settings'.
+  // View state controls which panel is shown: 'main' (default), 'settings', or 'library'.
   // This is local UI state — not persisted. The popup always opens on the main view.
-  const [view, setView] = useState<'main' | 'settings'>('main');
+  const [view, setView] = useState<'main' | 'settings' | 'library'>('main');
 
   // Pre-fill form fields and load settings in a single mount effect.
   // Using loadSettings() (which reads chrome.storage.local) alongside the existing
@@ -1191,6 +1433,16 @@ export default function App() {
 
   const showGallery = state.scanStatus === 'done' && state.images.length > 0;
 
+  // When the library view is active, render LibraryPanel in place of the main view.
+  // Library is read-only — no state changes flow back to the popup reducer.
+  if (view === 'library') {
+    return (
+      <div className="w-[360px] flex flex-col font-inter" style={{ height: '600px' }}>
+        <LibraryPanel onBack={() => setView('main')} />
+      </div>
+    );
+  }
+
   // When the settings view is active, render SettingsPanel in place of the main view.
   // Settings changes are dispatched as SETTINGS_LOADED so the reducer updates state.settings,
   // and persisted immediately via saveSettings() to chrome.storage.local.
@@ -1224,6 +1476,7 @@ export default function App() {
         blobCount={state.blobCount}
         onScan={handleScan}
         onSettings={() => setView('settings')}
+        onLibrary={() => setView('library')}
       />
 
       {/* Scrollable middle area: gallery header + thumbnails + metadata form */}
