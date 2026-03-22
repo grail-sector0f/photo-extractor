@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: unknown
-stopped_at: "999.3-02 checkpoint:human-verify — awaiting Chrome UI verification"
-last_updated: "2026-03-22T15:53:42.608Z"
+stopped_at: Completed 999.3-02 — phase 999.3 complete
+last_updated: "2026-03-22T20:52:59.839Z"
 progress:
   total_phases: 8
   completed_phases: 8
@@ -65,6 +65,7 @@ Plan: 2 of 2
 | Phase 999.2 P02 | 15 | 2 tasks | 1 files |
 | Phase 999.3 P01 | 10 | 2 tasks | 3 files |
 | Phase 999.3 P02 | 3 | 1 tasks | 2 files |
+| Phase 999.3 P02 | 45 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,9 @@ Recent decisions affecting current work:
 - [Phase 999.3]: appendToLibrary uses LRU eviction via slice from tail — newest entries survive at 500-record cap
 - [Phase 999.3]: STORAGE_KEY and MAX_RECORDS exported as named constants from lib/library.ts for test verification without magic strings
 - [Phase 999.3]: compareRecords extracted at module level in App.tsx for direct testability without React rendering
+- [Phase 999.3]: FilterBar replaced SortBar — user wanted filter-by-field not sort-by-field; dropdowns derive options from loaded records
+- [Phase 999.3]: CDN rewrite for Booking.com scoped to /hotel/ pathname — /xphoto/ attraction images were 404ing at max10000x10000
+- [Phase 999.3]: removeFromLibrary() and ERASE_DOWNLOADS added for per-record delete and download manager clear
 
 ### Roadmap Evolution
 
@@ -141,6 +145,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T15:53:42.606Z
-Stopped at: 999.3-02 checkpoint:human-verify — awaiting Chrome UI verification
+Last session: 2026-03-22T20:52:59.838Z
+Stopped at: Completed 999.3-02 — phase 999.3 complete
 Resume file: None
