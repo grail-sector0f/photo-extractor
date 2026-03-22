@@ -38,4 +38,4 @@ Productivity
 English (US)
 
 ## Privacy Policy URL
-https://[GITHUB_USERNAME].github.io/photo-extractor/privacy-policy.html
+https://grail-sector0f.github.io/photo-extractor/privacy-policy.html
