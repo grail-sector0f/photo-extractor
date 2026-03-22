@@ -96,3 +96,17 @@ export async function appendToLibrary(record: SavedPhotoRecord): Promise<void> {
   // Persist the capped array back to storage
   await chrome.storage.local.set({ [STORAGE_KEY]: capped });
 }
+
+/**
+ * Remove a single record from the library by its ID.
+ *
+ * Used when the user manually deletes a record from the Library view
+ * (e.g., because the underlying file was deleted from disk).
+ *
+ * @param id - The id field of the SavedPhotoRecord to remove
+ */
+export async function removeFromLibrary(id: string): Promise<void> {
+  const existing = await loadLibrary();
+  const updated = existing.filter((r) => r.id !== id);
+  await chrome.storage.local.set({ [STORAGE_KEY]: updated });
+}

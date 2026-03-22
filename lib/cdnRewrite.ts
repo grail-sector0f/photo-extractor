@@ -90,12 +90,22 @@ export function rewriteUrlForMaxResolution(rawUrl: string): string {
  * We replace that segment with /max10000x10000/ to request the largest available
  * size. Query params like k= and o= are authentication tokens and must be preserved.
  *
+ * IMPORTANT: Only hotel images (/hotel/ path) are rewritten. Attractions images use
+ * /xphoto/ and have a lower max resolution (e.g. max1200) — requesting max10000x10000
+ * on those paths returns a 404 HTML page. Leave xphoto URLs unchanged so they
+ * download at their actual maximum size.
+ *
  * Source: Booking.com bstatic CDN URL structure observed in production.
  *
  * @param url - Parsed Booking.com URL
- * @returns   - Upscaled URL string, or url.href unchanged if no /maxNNN/ in path
+ * @returns   - Upscaled URL string, or url.href unchanged if path is not a hotel image
  */
 function rewriteBooking(url: URL): string {
+  // Only rewrite hotel images — attractions (/xphoto/) and other paths are left unchanged
+  if (!url.pathname.includes('/hotel/')) {
+    return url.href;
+  }
+
   // Match /maxNNN/ (width only) or /maxNNNxNNN/ (width x height) path segments
   const rewritten = url.pathname.replace(/\/max\d+(x\d+)?\//i, '/max10000x10000/');
 

@@ -35,7 +35,7 @@ import type { AppSettings } from '../../lib/settings';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, MIN_DIMENSION_PRESETS } from '../../lib/settings';
 // Library data layer — append a record after each successful download so the
 // Library view has data to display. Only fires on success (not on error/failure).
-import { loadLibrary, appendToLibrary } from '../../lib/library';
+import { loadLibrary, appendToLibrary, removeFromLibrary } from '../../lib/library';
 import type { SavedPhotoRecord } from '../../lib/library';
 
 // ─── State Types ──────────────────────────────────────────────────────────────
@@ -81,6 +81,7 @@ type Action =
   | { type: 'DOWNLOAD_STARTED'; total: number }
   | { type: 'DOWNLOAD_PROGRESS'; done: number }
   | { type: 'DOWNLOAD_DONE'; saved: number; failed: number }
+  | { type: 'DOWNLOAD_RESET' }
   | { type: 'PREFILL_LOADED'; destination: string; vendor: string; category: string; year: string }
   | { type: 'SETTINGS_LOADED'; settings: AppSettings };
 
@@ -203,6 +204,15 @@ export function popupReducer(state: PopupState, action: Action): PopupState {
       }
       return { ...state, downloadStatus, downloadSaved: saved, downloadFailed: failed };
     }
+
+    case 'DOWNLOAD_RESET':
+      return {
+        ...state,
+        downloadStatus: 'idle',
+        downloadProgress: { done: 0, total: 0 },
+        downloadSaved: 0,
+        downloadFailed: 0,
+      };
 
     case 'PREFILL_LOADED':
       return {
@@ -684,7 +694,7 @@ function NamingForm({ destination, vendor, category, year, notes, onChange }: Na
       {/* Destination */}
       <div className="mb-3">
         <label htmlFor="field-destination" className={labelClass}>
-          Destination
+          Destination <span className="text-red-400">*</span>
         </label>
         <input
           id="field-destination"
@@ -699,7 +709,7 @@ function NamingForm({ destination, vendor, category, year, notes, onChange }: Na
       {/* Property / Vendor */}
       <div className="mb-3">
         <label htmlFor="field-vendor" className={labelClass}>
-          Property / Vendor
+          Property / Vendor <span className="text-red-400">*</span>
         </label>
         <input
           id="field-vendor"
@@ -716,7 +726,7 @@ function NamingForm({ destination, vendor, category, year, notes, onChange }: Na
         {/* Category — locked select dropdown (no free-text entry) */}
         <div>
           <label htmlFor="field-category" className={labelClass}>
-            Category
+            Category <span className="text-red-400">*</span>
           </label>
           <select
             id="field-category"
@@ -758,7 +768,7 @@ function NamingForm({ destination, vendor, category, year, notes, onChange }: Na
           id="field-notes"
           rows={2}
           value={notes}
-          placeholder="Add a description for the advisor..."
+          placeholder="Add additional description..."
           onChange={(e) => onChange('notes', e.target.value)}
           className={`${inputClass} resize-none`}
         />
@@ -813,8 +823,10 @@ function DownloadButton({
   let label: string;
   if (downloadStatus === 'downloading') {
     label = 'Downloading...';
-  } else if (count === 0 || !fieldsValid) {
+  } else if (count === 0) {
     label = 'Download Photos';
+  } else if (!fieldsValid) {
+    label = 'Fill in required fields ↑';
   } else if (count === 1) {
     label = 'Download 1 Photo';
   } else {
@@ -853,18 +865,21 @@ interface StatusMessageProps {
   downloadProgress: { done: number; total: number };
   downloadSaved: number;
   downloadFailed: number;
+  dispatch: React.Dispatch<Action>;
 }
 
 /**
  * Inline status feedback shown below the download button.
  * Covers all four outcomes: in-progress, success, partial failure, full failure.
- * Copy follows the copywriting contract in UI-SPEC exactly.
+ * After completion, shows a "Clear" button that erases the entries from Chrome's
+ * download manager and resets the status back to idle.
  */
 function StatusMessage({
   downloadStatus,
   downloadProgress,
   downloadSaved,
   downloadFailed,
+  dispatch,
 }: StatusMessageProps) {
   if (downloadStatus === 'idle') return null;
 
@@ -889,8 +904,28 @@ function StatusMessage({
     colorClass = 'text-error';
   }
 
+  const handleClear = () => {
+    // Ask the background to erase travel-photos entries from Chrome's download manager,
+    // then reset the popup status back to idle. Does not affect files on disk or the library.
+    chrome.runtime.sendMessage({ type: 'ERASE_DOWNLOADS' }, () => {
+      dispatch({ type: 'DOWNLOAD_RESET' });
+    });
+  };
+
+  const isComplete = downloadStatus !== 'downloading';
+
   return (
-    <p className={`text-[13px] mt-2 px-4 pb-3 ${colorClass}`}>{message}</p>
+    <div className="mt-2 px-4 pb-3">
+      <p className={`text-[13px] ${colorClass}`}>{message}</p>
+      {isComplete && (
+        <button
+          onClick={handleClear}
+          className="text-[12px] text-primary underline mt-1"
+        >
+          Clear download history
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -1132,58 +1167,80 @@ function SettingsPanel({ settings, onSave, onBack }: SettingsPanelProps) {
 // ─── Library Components ───────────────────────────────────────────────────────
 
 /**
- * Sort comparator for library records. Exported so unit tests can drive it
- * directly without rendering React.
+ * Sort comparator for library records by savedAt (newest first).
+ * ISO 8601 strings compare correctly with localeCompare because their
+ * lexicographic and chronological orders match.
  *
- * - savedAt: descending (newest first) — ISO 8601 strings compare correctly
- *   with localeCompare because their lexicographic and chronological orders match.
- * - All other fields: ascending alphabetical — destination, vendor, category, year.
+ * Exported so unit tests can drive it directly without rendering React.
  */
-export function compareRecords(
-  a: SavedPhotoRecord,
-  b: SavedPhotoRecord,
-  sortBy: 'savedAt' | 'destination' | 'vendor' | 'category' | 'year',
-): number {
-  if (sortBy === 'savedAt') return b.savedAt.localeCompare(a.savedAt); // newest first
-  return a[sortBy].localeCompare(b[sortBy]); // alphabetical ascending
+export function compareRecords(a: SavedPhotoRecord, b: SavedPhotoRecord): number {
+  return b.savedAt.localeCompare(a.savedAt);
 }
-
-interface SortBarProps {
-  sortBy: 'savedAt' | 'destination' | 'vendor' | 'category' | 'year';
-  onSortChange: (field: 'savedAt' | 'destination' | 'vendor' | 'category' | 'year') => void;
-}
-
-// All five sort options the user can choose from. Defined at module level (not
-// inside the component) so it's not recreated on every render.
-const SORT_OPTIONS: Array<{ label: string; value: SortBarProps['sortBy'] }> = [
-  { label: 'Recent', value: 'savedAt' },
-  { label: 'Destination', value: 'destination' },
-  { label: 'Vendor', value: 'vendor' },
-  { label: 'Category', value: 'category' },
-  { label: 'Year', value: 'year' },
-];
 
 /**
- * Horizontal row of sort-by buttons. Active button uses primary-container styling
- * (same pattern as the size preset buttons in SettingsPanel).
- * Container is overflow-x-auto so buttons scroll horizontally if they overflow the 360px width.
+ * Filter library records by destination, category, and/or year.
+ * An empty string value means "no filter applied" for that field.
+ *
+ * Exported so unit tests can drive it directly without rendering React.
  */
-function SortBar({ sortBy, onSortChange }: SortBarProps) {
+export function filterRecords(
+  records: SavedPhotoRecord[],
+  filters: { destination: string; category: string; year: string },
+): SavedPhotoRecord[] {
+  return records.filter(
+    (r) =>
+      (!filters.destination || r.destination === filters.destination) &&
+      (!filters.category || r.category === filters.category) &&
+      (!filters.year || r.year === filters.year),
+  );
+}
+
+interface FilterBarProps {
+  records: SavedPhotoRecord[];
+  filters: { destination: string; category: string; year: string };
+  onFilterChange: (field: 'destination' | 'category' | 'year', value: string) => void;
+}
+
+/**
+ * Three compact dropdowns for filtering the library by destination, category, and year.
+ * Unique option values are derived from the full record set so only real values appear.
+ * Selecting "Destination" (default) means no filter applied for that field.
+ */
+function FilterBar({ records, filters, onFilterChange }: FilterBarProps) {
+  // Derive sorted unique values for each filterable field from the full record set
+  const destinations = [...new Set(records.map((r) => r.destination).filter(Boolean))].sort();
+  const categories = [...new Set(records.map((r) => r.category).filter(Boolean))].sort();
+  const years = [...new Set(records.map((r) => r.year).filter(Boolean))].sort().reverse();
+
+  const selectClass =
+    'flex-1 min-w-0 text-xs font-inter bg-surface-container text-on-surface rounded-lg px-2 py-1.5 border-none focus:ring-2 focus:ring-primary/40 focus:outline-none';
+
   return (
-    <div className="flex gap-2 px-4 py-3 overflow-x-auto">
-      {SORT_OPTIONS.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onSortChange(opt.value)}
-          className={`py-1.5 px-3 rounded-lg text-xs font-medium font-manrope transition-colors whitespace-nowrap ${
-            sortBy === opt.value
-              ? 'bg-primary-container text-on-primary-container'
-              : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-          }`}
-        >
-          {opt.label}
-        </button>
-      ))}
+    <div className="flex gap-2 px-4 py-3">
+      <select
+        className={selectClass}
+        value={filters.destination}
+        onChange={(e) => onFilterChange('destination', e.target.value)}
+      >
+        <option value="">Destination</option>
+        {destinations.map((d) => <option key={d} value={d}>{d}</option>)}
+      </select>
+      <select
+        className={selectClass}
+        value={filters.category}
+        onChange={(e) => onFilterChange('category', e.target.value)}
+      >
+        <option value="">Category</option>
+        {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
+      <select
+        className={selectClass}
+        value={filters.year}
+        onChange={(e) => onFilterChange('year', e.target.value)}
+      >
+        <option value="">Year</option>
+        {years.map((y) => <option key={y} value={y}>{y}</option>)}
+      </select>
     </div>
   );
 }
@@ -1191,11 +1248,12 @@ function SortBar({ sortBy, onSortChange }: SortBarProps) {
 /**
  * Single record row: 56px thumbnail (with broken-image "?" fallback) + filename
  * truncated to one line + tag chips for destination, vendor, category, year + timestamp.
+ * Trash button on the right lets the user remove stale records (e.g. deleted files).
  *
  * Layout mirrors LibraryRecord spec in UI-SPEC.md.
  * Broken-image fallback pattern mirrors ThumbnailCard in the main view.
  */
-function LibraryRecord({ record }: { record: SavedPhotoRecord }) {
+function LibraryRecord({ record, onRemove }: { record: SavedPhotoRecord; onRemove: (id: string) => void }) {
   return (
     <div className="flex items-start gap-3 px-4 py-3 border-b border-outline-variant">
       {/* Thumbnail with broken-image fallback */}
@@ -1251,6 +1309,18 @@ function LibraryRecord({ record }: { record: SavedPhotoRecord }) {
         {/* Timestamp — first 10 chars of ISO string gives "YYYY-MM-DD" */}
         <p className="text-[11px] text-on-surface-variant mt-1">{record.savedAt.slice(0, 10)}</p>
       </div>
+
+      {/* Remove button — lets user delete stale records (e.g. file removed from disk) */}
+      <button
+        onClick={() => onRemove(record.id)}
+        className="flex-shrink-0 p-1 text-on-surface-variant hover:text-error transition-colors"
+        aria-label="Remove from library"
+      >
+        {/* Material Symbols delete path */}
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21H7Zm2-4h2V8H9v9Zm4 0h2V8h-2v9Z"/>
+        </svg>
+      </button>
     </div>
   );
 }
@@ -1305,7 +1375,7 @@ interface LibraryPanelProps {
 function LibraryPanel({ onBack }: LibraryPanelProps) {
   const [records, setRecords] = useState<SavedPhotoRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<'savedAt' | 'destination' | 'vendor' | 'category' | 'year'>('savedAt');
+  const [filters, setFilters] = useState({ destination: '', category: '', year: '' });
 
   // Load records once on mount. No dependency array re-fetch — the panel
   // is unmounted and remounted when navigating away, so a re-mount always
@@ -1317,8 +1387,20 @@ function LibraryPanel({ onBack }: LibraryPanelProps) {
     });
   }, []);
 
-  // Client-side sort — spread to avoid mutating state in place
-  const sorted = [...records].sort((a, b) => compareRecords(a, b, sortBy));
+  const handleFilterChange = (field: 'destination' | 'category' | 'year', value: string) => {
+    setFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleRemove = (id: string) => {
+    // Remove from storage, then remove from local state so the UI updates instantly
+    removeFromLibrary(id);
+    setRecords((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const hasActiveFilter = filters.destination || filters.category || filters.year;
+
+  // Apply filters then sort newest-first
+  const displayed = filterRecords(records, filters).sort(compareRecords);
 
   return (
     <div className="flex flex-col h-full">
@@ -1339,8 +1421,8 @@ function LibraryPanel({ onBack }: LibraryPanelProps) {
         </div>
       </div>
 
-      {/* Sort controls — always visible, even during loading */}
-      <SortBar sortBy={sortBy} onSortChange={setSortBy} />
+      {/* Filter dropdowns — always visible, even during loading */}
+      <FilterBar records={records} filters={filters} onFilterChange={handleFilterChange} />
 
       {/* Scrollable record list */}
       <div className="flex-1 min-h-0 overflow-y-auto">
@@ -1348,9 +1430,20 @@ function LibraryPanel({ onBack }: LibraryPanelProps) {
           <LibrarySkeletons />
         ) : records.length === 0 ? (
           <EmptyLibraryState />
+        ) : displayed.length === 0 ? (
+          // Filters are active but nothing matches — offer a way to clear them
+          <div className="p-4 py-8 flex flex-col items-center justify-center text-center">
+            <p className="text-[15px] font-semibold text-on-surface mb-1">No photos match these filters</p>
+            <button
+              onClick={() => setFilters({ destination: '', category: '', year: '' })}
+              className="text-[13px] text-primary underline mt-1"
+            >
+              Clear filters
+            </button>
+          </div>
         ) : (
-          sorted.map((record) => (
-            <LibraryRecord key={record.id} record={record} />
+          displayed.map((record) => (
+            <LibraryRecord key={record.id} record={record} onRemove={handleRemove} />
           ))
         )}
       </div>
@@ -1531,6 +1624,7 @@ export default function App() {
             downloadProgress={state.downloadProgress}
             downloadSaved={state.downloadSaved}
             downloadFailed={state.downloadFailed}
+            dispatch={dispatch}
           />
         </>
       )}

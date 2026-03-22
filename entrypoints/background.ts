@@ -26,6 +26,16 @@ export default defineBackground({
 
         return true; // keep message port open for async response
       }
+
+      if (message.type === 'ERASE_DOWNLOADS') {
+        // Remove all travel-photos entries from Chrome's download manager.
+        // Does not delete files from disk or affect the library in chrome.storage.local.
+        chrome.downloads.erase({ filenameRegex: 'travel-photos' }, () => {
+          sendResponse({ ok: true });
+        });
+
+        return true; // keep message port open for async response
+      }
     });
   },
 });
