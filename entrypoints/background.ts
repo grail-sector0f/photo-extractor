@@ -36,6 +36,19 @@ export default defineBackground({
 
         return true; // keep message port open for async response
       }
+
+      if (message.type === 'DELETE_FILE') {
+        const { downloadId } = message.payload;
+        // removeFile deletes the file from disk using Chrome's download history entry.
+        // If the entry was cleared from history, lastError is set — we discard it and
+        // respond ok regardless, so the UI still removes the library record.
+        chrome.downloads.removeFile(downloadId, () => {
+          void chrome.runtime.lastError; // discard "no such download" errors
+          sendResponse({ ok: true });
+        });
+
+        return true; // keep message port open for async response
+      }
     });
   },
 });

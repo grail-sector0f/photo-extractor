@@ -25,6 +25,8 @@
  * - year: year field value as a string (e.g. "2025")
  * - notes: optional advisory notes (empty string when not provided)
  * - savedAt: ISO 8601 timestamp of when the download completed
+ * - downloadId: Chrome's numeric download ID, used to call chrome.downloads.removeFile
+ *   when the user deletes the record. Optional because older records won't have this field.
  */
 export interface SavedPhotoRecord {
   id: string;
@@ -36,6 +38,7 @@ export interface SavedPhotoRecord {
   year: string;
   notes: string;
   savedAt: string;
+  downloadId?: number;
 }
 
 /**

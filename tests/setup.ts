@@ -8,6 +8,8 @@ export const chromeMock = {
     search: vi.fn().mockResolvedValue([]),
     // download() returns the numeric download ID Chrome assigns to the queued file
     download: vi.fn().mockResolvedValue(12345),
+    // removeFile() deletes the file from disk via the download history entry
+    removeFile: vi.fn().mockImplementation((_id: number, cb?: () => void) => { cb?.(); }),
   },
   storage: {
     session: {
@@ -55,6 +57,7 @@ beforeEach(() => {
   // Restore default return values after clearAllMocks wipes them
   chromeMock.downloads.search.mockResolvedValue([]);
   chromeMock.downloads.download.mockResolvedValue(12345);
+  chromeMock.downloads.removeFile.mockImplementation((_id: number, cb?: () => void) => { cb?.(); });
   chromeMock.storage.session.set.mockResolvedValue(undefined);
   chromeMock.storage.session.get.mockResolvedValue({});
   chromeMock.storage.local.get.mockResolvedValue({});

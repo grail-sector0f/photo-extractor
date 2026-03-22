@@ -239,7 +239,7 @@ export function popupReducer(state: PopupState, action: Action): PopupState {
  * Downloads go through the background because chrome.downloads is only
  * available in the service worker context — the popup cannot call it directly.
  */
-function sendDownloadMessage(url: string, basename: string, ext: string): Promise<void> {
+function sendDownloadMessage(url: string, basename: string, ext: string): Promise<number> {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(
       { type: 'DOWNLOAD_FILE', payload: { url, basename, ext } },
@@ -249,7 +249,7 @@ function sendDownloadMessage(url: string, basename: string, ext: string): Promis
           return;
         }
         if (response?.ok) {
-          resolve();
+          resolve(response.downloadId as number);
         } else {
           reject(new Error(response?.error ?? 'unknown error'));
         }
@@ -392,17 +392,20 @@ async function runDownloads(
       // When disabled, upscaledUrl === url so the fast path below fires and skips the fallback.
       const upscaledUrl = state.settings.cdnUpscalingEnabled ? rewriteUrlForMaxResolution(url) : url;
 
+      // Capture the Chrome download ID so we can later call removeFile when the user
+      // deletes the record from the library (deleteFile requires the download history entry).
+      let downloadId: number;
       if (upscaledUrl === url) {
         // No rewrite applied -- download directly
-        await sendDownloadMessage(url, numberedBasenames[i], ext);
+        downloadId = await sendDownloadMessage(url, numberedBasenames[i], ext);
       } else {
         // CDN rewrite applied -- try upscaled URL first, fall back to original
         try {
-          await sendDownloadMessage(upscaledUrl, numberedBasenames[i], ext);
+          downloadId = await sendDownloadMessage(upscaledUrl, numberedBasenames[i], ext);
         } catch {
           // Rewritten URL failed (404 or network error) -- silently try original.
           // If this also throws, Promise.allSettled catches it as 1 rejection.
-          await sendDownloadMessage(url, numberedBasenames[i], ext);
+          downloadId = await sendDownloadMessage(url, numberedBasenames[i], ext);
         }
       }
 
@@ -424,6 +427,7 @@ async function runDownloads(
         year: state.year,
         notes: state.notes,
         savedAt: new Date().toISOString(),
+        downloadId,
       });
     }),
   );
@@ -905,11 +909,11 @@ function StatusMessage({
   }
 
   const handleClear = () => {
-    // Ask the background to erase travel-photos entries from Chrome's download manager,
-    // then reset the popup status back to idle. Does not affect files on disk or the library.
-    chrome.runtime.sendMessage({ type: 'ERASE_DOWNLOADS' }, () => {
-      dispatch({ type: 'DOWNLOAD_RESET' });
-    });
+    // Reset the popup status only — do NOT erase Chrome's download history.
+    // Erasing download entries would prevent chrome.downloads.removeFile from working
+    // when the user later deletes photos from the Library view.
+    // Chrome expires download history entries automatically (default: 30 days).
+    dispatch({ type: 'DOWNLOAD_RESET' });
   };
 
   const isComplete = downloadStatus !== 'downloading';
@@ -922,7 +926,7 @@ function StatusMessage({
           onClick={handleClear}
           className="text-[12px] text-primary underline mt-1"
         >
-          Clear download history
+          Done
         </button>
       )}
     </div>
@@ -1254,6 +1258,9 @@ function FilterBar({ records, filters, onFilterChange }: FilterBarProps) {
  * Broken-image fallback pattern mirrors ThumbnailCard in the main view.
  */
 function LibraryRecord({ record, onRemove }: { record: SavedPhotoRecord; onRemove: (id: string) => void }) {
+  // When true, the trash button is replaced with a confirm/cancel prompt
+  const [confirming, setConfirming] = useState(false);
+
   return (
     <div className="flex items-start gap-3 px-4 py-3 border-b border-outline-variant">
       {/* Thumbnail with broken-image fallback */}
@@ -1310,17 +1317,41 @@ function LibraryRecord({ record, onRemove }: { record: SavedPhotoRecord; onRemov
         <p className="text-[11px] text-on-surface-variant mt-1">{record.savedAt.slice(0, 10)}</p>
       </div>
 
-      {/* Remove button — lets user delete stale records (e.g. file removed from disk) */}
-      <button
-        onClick={() => onRemove(record.id)}
-        className="flex-shrink-0 p-1 text-on-surface-variant hover:text-error transition-colors"
-        aria-label="Remove from library"
-      >
-        {/* Material Symbols delete path */}
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21H7Zm2-4h2V8H9v9Zm4 0h2V8h-2v9Z"/>
-        </svg>
-      </button>
+      {/* Right side: trash button or inline delete confirmation */}
+      <div className="flex-shrink-0 flex flex-col items-end gap-1">
+        {confirming ? (
+          // Confirmation prompt — replaces the trash icon after first click
+          <>
+            <p className="text-[11px] font-inter text-error font-medium">Delete file?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirming(false)}
+                className="text-[11px] font-inter text-on-surface-variant hover:underline"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => onRemove(record.id)}
+                className="text-[11px] font-inter text-error font-semibold hover:underline"
+              >
+                Delete
+              </button>
+            </div>
+          </>
+        ) : (
+          // Trash icon — first click shows the confirmation prompt
+          <button
+            onClick={() => setConfirming(true)}
+            className="p-1 text-on-surface-variant hover:text-error transition-colors"
+            aria-label="Delete photo"
+          >
+            {/* Material Symbols delete path */}
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21H7Zm2-4h2V8H9v9Zm4 0h2V8h-2v9Z"/>
+            </svg>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -1392,7 +1423,13 @@ function LibraryPanel({ onBack }: LibraryPanelProps) {
   };
 
   const handleRemove = (id: string) => {
-    // Remove from storage, then remove from local state so the UI updates instantly
+    const record = records.find((r) => r.id === id);
+    if (record?.downloadId != null) {
+      // Ask background to delete the file from disk. Fire-and-forget — if the download
+      // entry has been cleared from Chrome's history, removeFile fails silently.
+      chrome.runtime.sendMessage({ type: 'DELETE_FILE', payload: { downloadId: record.downloadId } });
+    }
+    // Remove from storage and local state regardless of whether removeFile succeeds
     removeFromLibrary(id);
     setRecords((prev) => prev.filter((r) => r.id !== id));
   };
