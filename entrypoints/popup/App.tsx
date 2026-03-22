@@ -33,6 +33,9 @@ import { rewriteUrlForMaxResolution } from '../../lib/cdnRewrite';
 // Plan 02 builds the settings UI that reads/writes via these helpers.
 import type { AppSettings } from '../../lib/settings';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, MIN_DIMENSION_PRESETS } from '../../lib/settings';
+// Library data layer — append a record after each successful download so the
+// Library view has data to display. Only fires on success (not on error/failure).
+import { appendToLibrary } from '../../lib/library';
 
 // ─── State Types ──────────────────────────────────────────────────────────────
 
@@ -394,6 +397,23 @@ async function runDownloads(
 
       // Increment progress count after each successful download (or successful fallback)
       dispatch({ type: 'DOWNLOAD_PROGRESS', done: ++done });
+
+      // Log this download to the library for browsing in the Library view.
+      // Uses the original URL (before CDN rewrite) for thumbnail display,
+      // and the pre-numbered basename for the filename field.
+      // This call only runs when the download succeeded — failed downloads are
+      // caught by Promise.allSettled as rejected and never reach this line.
+      await appendToLibrary({
+        id: `${Date.now()}-${i}`,
+        url,
+        filename: `travel-photos/${numberedBasenames[i]}.${ext}`,
+        destination: state.destination,
+        vendor: state.vendor,
+        category: state.category,
+        year: state.year,
+        notes: state.notes,
+        savedAt: new Date().toISOString(),
+      });
     }),
   );
 
@@ -1081,7 +1101,7 @@ function SettingsPanel({ settings, onSave, onBack }: SettingsPanelProps) {
             <div className="flex-1">
               <p className="text-sm font-semibold font-manrope text-on-surface mb-0.5">Request higher-resolution images</p>
               <p className="text-xs font-inter text-on-surface-variant">
-                When downloading from travel sites like Airbnb and Booking.com, request the full-size photo instead of the smaller preview shown on the page
+                When downloading from sites, request the full-size photo instead of the smaller preview shown on the page.
               </p>
             </div>
             <ToggleSwitch
