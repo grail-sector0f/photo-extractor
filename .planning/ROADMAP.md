@@ -164,8 +164,8 @@ Plans:
   5. Sort controls offer Recent (default, newest-first), Destination, Vendor, Category, Year
   6. Empty state shows "No saved photos yet" when no records exist
   7. Broken thumbnails show "?" placeholder (mirrors ThumbnailCard pattern)
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 999.3-01-PLAN.md — Create library data layer (SavedPhotoRecord, loadLibrary, appendToLibrary) with TDD, wire into runDownloads
+- [x] 999.3-01-PLAN.md — Create library data layer (SavedPhotoRecord, loadLibrary, appendToLibrary) with TDD, wire into runDownloads
 - [ ] 999.3-02-PLAN.md — Build LibraryPanel UI with SortBar, record list, empty state, navigation, and visual verification

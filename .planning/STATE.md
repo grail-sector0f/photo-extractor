@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 999.2-02-PLAN.md
-last_updated: "2026-03-22T03:55:58.351Z"
+stopped_at: Completed 999.3-01-PLAN.md
+last_updated: "2026-03-22T15:44:54.761Z"
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 16
-  completed_plans: 16
+  total_plans: 18
+  completed_plans: 17
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Jennifer can grab any photo she sees while browsing travel sites and have it saved, named, and ready to drop into a tern.travel itinerary without friction.
-**Current focus:** Phase 999.2 — settings-view-image-quality-control-minimum-resolution-filtering
+**Current focus:** Phase 999.3 — library-view-sort-saved-photos-by-meta-tags-backlog
 
 ## Current Position
 
-Phase: 999.3
-Plan: Not started
+Phase: 999.3 (library-view-sort-saved-photos-by-meta-tags-backlog) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Plan: Not started
 | Phase 999.1 P03 | 25 | 2 tasks | 1 files |
 | Phase 999.2 P01 | 4 | 2 tasks | 6 files |
 | Phase 999.2 P02 | 15 | 2 tasks | 1 files |
+| Phase 999.3 P01 | 10 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -118,6 +119,8 @@ Recent decisions affecting current work:
 - [Phase 999.2-01]: Settings loaded alongside prefill in single mount useEffect — one chrome.storage.local.get call instead of two
 - [Phase 999.2]: CDN toggle label uses 'Request higher-resolution images' with plain-English description — no CDN jargon exposed to user
 - [Phase 999.2]: ToggleSwitch implemented as button with role=switch rather than native checkbox for MD3-style custom switch appearance
+- [Phase 999.3]: appendToLibrary uses LRU eviction via slice from tail — newest entries survive at 500-record cap
+- [Phase 999.3]: STORAGE_KEY and MAX_RECORDS exported as named constants from lib/library.ts for test verification without magic strings
 
 ### Roadmap Evolution
 
@@ -136,6 +139,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T03:52:58.421Z
-Stopped at: Completed 999.2-02-PLAN.md
+Last session: 2026-03-22T15:44:54.759Z
+Stopped at: Completed 999.3-01-PLAN.md
 Resume file: None
