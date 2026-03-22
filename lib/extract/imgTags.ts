@@ -22,12 +22,7 @@ function resolveUrl(raw: string): string {
   }
 }
 
-// Minimum dimension (in pixels) for both width and height.
-// Images smaller than this in either dimension are skipped — they're likely
-// icons, thumbnails, or UI decorations rather than real travel photos.
-const MIN_DIMENSION = 100;
-
-export function extractImgTags(): ImageResult[] {
+export function extractImgTags(minDimension: number = 150): ImageResult[] {
   const results: ImageResult[] = [];
   // Tracks URLs we've already added; prevents duplicates from multiple img tags
   const seen = new Set<string>();
@@ -48,7 +43,7 @@ export function extractImgTags(): ImageResult[] {
     const w = (img.complete && img.naturalWidth > 0) ? img.naturalWidth : img.width;
     const h = (img.complete && img.naturalWidth > 0) ? img.naturalHeight : img.height;
 
-    if (w < MIN_DIMENSION || h < MIN_DIMENSION) {
+    if (w < minDimension || h < minDimension) {
       return;
     }
 

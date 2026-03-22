@@ -17,6 +17,11 @@ import { handleScanSession } from '@/entrypoints/content';
 
 // Mock the extractor modules so tests control what the initial scan returns.
 // These are replaced with vi.fn() implementations that return predictable arrays.
+// extractImgTags is mocked with a spy so tests can assert it was called with the
+// correct minDimension value passed down from the SCAN_PAGE message.
+import { extractImgTags } from '@/lib/extract/imgTags';
+import { DEFAULT_SETTINGS } from '@/lib/settings';
+
 vi.mock('@/lib/extract/imgTags', () => ({
   extractImgTags: vi.fn(() => [
     {
@@ -149,6 +154,50 @@ describe('handleScanSession', () => {
     }).not.toThrow();
     // Without SCAN_PAGE, no postMessage should be called
     expect(port.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('passes custom minDimension to extractImgTags when SCAN_PAGE includes it', () => {
+    const port = createMockPort('scan-session');
+    handleScanSession(port as unknown as chrome.runtime.Port);
+    port._simulateMessage({ type: 'SCAN_PAGE', minDimension: 300 });
+
+    // extractImgTags should be called with the custom minDimension from the message
+    expect(extractImgTags).toHaveBeenCalledWith(300);
+  });
+
+  it('falls back to DEFAULT_SETTINGS.minDimension when SCAN_PAGE omits minDimension', () => {
+    const port = createMockPort('scan-session');
+    handleScanSession(port as unknown as chrome.runtime.Port);
+    port._simulateMessage({ type: 'SCAN_PAGE' });
+
+    // No minDimension in message — should use DEFAULT_SETTINGS.minDimension (150)
+    expect(extractImgTags).toHaveBeenCalledWith(DEFAULT_SETTINGS.minDimension);
+  });
+
+  it('processImg uses provided minDimension instead of hardcoded value', async () => {
+    // Set a large minDimension so that a 200x200 image is filtered out
+    // (200 < 300 → should be excluded)
+    const port = createMockPort('scan-session');
+    handleScanSession(port as unknown as chrome.runtime.Port);
+    port._simulateMessage({ type: 'SCAN_PAGE', minDimension: 300 });
+
+    port.postMessage.mockClear();
+
+    // Add an img that is 200x200 — passes 150 threshold but not 300
+    const img = document.createElement('img');
+    img.src = 'https://example.com/medium-image.jpg';
+    Object.defineProperty(img, 'naturalWidth', { value: 200, configurable: true });
+    Object.defineProperty(img, 'naturalHeight', { value: 200, configurable: true });
+    Object.defineProperty(img, 'complete', { value: true, configurable: true });
+    document.body.appendChild(img);
+
+    await new Promise(r => setTimeout(r, 0));
+
+    // IMAGE_FOUND should NOT fire because 200 < 300 (the custom minDimension)
+    const imageFoundCalls = port.postMessage.mock.calls.filter(
+      (call: unknown[]) => (call[0] as { type: string }).type === 'IMAGE_FOUND'
+    );
+    expect(imageFoundCalls.length).toBe(0);
   });
 
   it('does not send IMAGE_FOUND for duplicate URLs already in initial scan', async () => {

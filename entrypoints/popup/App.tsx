@@ -29,6 +29,10 @@ import type { ImageResult } from '../../lib/extract/types';
 // CDN URL rewriting -- applies at download time only. Thumbnails in the grid use
 // original extracted URLs. See lib/cdnRewrite.ts for supported CDN patterns.
 import { rewriteUrlForMaxResolution } from '../../lib/cdnRewrite';
+// Settings data layer — types, defaults, and chrome.storage helpers.
+// Plan 02 will build the UI; this plan wires settings into scan and download logic.
+import type { AppSettings } from '../../lib/settings';
+import { DEFAULT_SETTINGS, loadSettings } from '../../lib/settings';
 
 // ─── State Types ──────────────────────────────────────────────────────────────
 
@@ -52,6 +56,9 @@ interface PopupState {
   downloadProgress: { done: number; total: number };
   downloadSaved: number;
   downloadFailed: number;
+  // User-configurable settings — loaded from chrome.storage.local on mount.
+  // Plan 02 will add a settings UI; this plan wires settings into scan and download.
+  settings: AppSettings;
 }
 
 // ─── Action Types ─────────────────────────────────────────────────────────────
@@ -70,7 +77,8 @@ type Action =
   | { type: 'DOWNLOAD_STARTED'; total: number }
   | { type: 'DOWNLOAD_PROGRESS'; done: number }
   | { type: 'DOWNLOAD_DONE'; saved: number; failed: number }
-  | { type: 'PREFILL_LOADED'; destination: string; vendor: string; category: string; year: string };
+  | { type: 'PREFILL_LOADED'; destination: string; vendor: string; category: string; year: string }
+  | { type: 'SETTINGS_LOADED'; settings: AppSettings };
 
 // ─── Initial State ────────────────────────────────────────────────────────────
 
@@ -88,6 +96,8 @@ export const initialState: PopupState = {
   downloadProgress: { done: 0, total: 0 },
   downloadSaved: 0,
   downloadFailed: 0,
+  // Start with defaults; overwritten by SETTINGS_LOADED dispatch on mount
+  settings: DEFAULT_SETTINGS,
 };
 
 // ─── Reducer ──────────────────────────────────────────────────────────────────
@@ -199,6 +209,9 @@ export function popupReducer(state: PopupState, action: Action): PopupState {
         year: action.year,
       };
 
+    case 'SETTINGS_LOADED':
+      return { ...state, settings: action.settings };
+
     default:
       return state;
   }
@@ -239,7 +252,7 @@ function sendDownloadMessage(url: string, basename: string, ext: string): Promis
  * while chrome.tabs.connect(tabId) opens a port to the content script running in
  * a specific tab. The content script's chrome.runtime.onConnect fires only for the latter.
  */
-async function startScan(dispatch: React.Dispatch<Action>): Promise<void> {
+async function startScan(dispatch: React.Dispatch<Action>, settings: AppSettings = DEFAULT_SETTINGS): Promise<void> {
   dispatch({ type: 'SCAN_STARTED' });
 
   // Query the tab this popup is attached to. currentWindow: true is required because
@@ -290,12 +303,19 @@ async function startScan(dispatch: React.Dispatch<Action>): Promise<void> {
 
   port.onMessage.addListener((msg: { type: string; payload: unknown }) => {
     if (msg.type === 'SCAN_RESULT') {
-      const { images, blobCount } = msg.payload as { images: ImageResult[]; blobCount: number };
+      const { images: rawImages, blobCount } = msg.payload as { images: ImageResult[]; blobCount: number };
+      // Apply GIF filter if skipGifs is enabled — filters out decorative animations and icon GIFs
+      const images = settings.skipGifs
+        ? rawImages.filter((img) => deriveExt(img.url) !== 'gif')
+        : rawImages;
       dispatch({ type: 'SCAN_RESULT', payload: { images, blobCount } });
       clearTimeout(timer);
     }
     if (msg.type === 'IMAGE_FOUND') {
-      dispatch({ type: 'IMAGE_FOUND', payload: msg.payload as ImageResult });
+      const img = msg.payload as ImageResult;
+      // Apply GIF filter for streamed images too (MutationObserver results)
+      if (settings.skipGifs && deriveExt(img.url) === 'gif') return;
+      dispatch({ type: 'IMAGE_FOUND', payload: img });
     }
   });
 
@@ -312,7 +332,8 @@ async function startScan(dispatch: React.Dispatch<Action>): Promise<void> {
     }
   });
 
-  port.postMessage({ type: 'SCAN_PAGE' });
+  // Pass minDimension from settings so the content script uses the configured threshold
+  port.postMessage({ type: 'SCAN_PAGE', minDimension: settings.minDimension });
 }
 
 /**
@@ -353,7 +374,9 @@ async function runDownloads(
       // Derive extension from the ORIGINAL URL (before CDN rewrite) so the
       // file extension comes from the actual image filename, not CDN transform params
       const ext = deriveExt(url);
-      const upscaledUrl = rewriteUrlForMaxResolution(url);
+      // Only apply CDN rewrite when cdnUpscalingEnabled is true in settings.
+      // When disabled, upscaledUrl === url so the fast path below fires and skips the fallback.
+      const upscaledUrl = state.settings.cdnUpscalingEnabled ? rewriteUrlForMaxResolution(url) : url;
 
       if (upscaledUrl === url) {
         // No rewrite applied -- download directly
@@ -915,19 +938,25 @@ function PopupHeader({ scanStatus, imageCount: _imageCount, blobCount: _blobCoun
 export default function App() {
   const [state, dispatch] = useReducer(popupReducer, initialState);
 
-  // Pre-fill form fields from last-used values stored in chrome.storage.local,
-  // but only if the current tab's hostname matches where those values were saved.
-  // This way, browsing multiple listings on the same site carries fields over,
-  // but navigating to a new site starts fresh instead of showing stale values.
+  // Pre-fill form fields and load settings in a single mount effect.
+  // Using loadSettings() (which reads chrome.storage.local) alongside the existing
+  // prefill keys — avoids two separate storage reads (per RESEARCH.md Pitfall 2).
   useEffect(() => {
     Promise.all([
       chrome.storage.local.get(['destination', 'vendor', 'category', 'year', 'lastHostname']),
       chrome.tabs.query({ active: true, currentWindow: true }),
-    ]).then(([data, tabs]) => {
+      // Load settings separately (loadSettings merges defaults internally)
+      loadSettings(),
+    ]).then(([data, tabs, settings]) => {
+      // Dispatch loaded settings so scan + download use the persisted values
+      dispatch({ type: 'SETTINGS_LOADED', settings });
+
       const currentHostname = tabs[0]?.url ? new URL(tabs[0].url).hostname : null;
       const storedHostname = data.lastHostname as string | undefined;
 
-      // Only restore if we're on the same site as the last save
+      // Only restore form fields if we're on the same site as the last save.
+      // Browsing multiple listings on the same site carries fields over;
+      // navigating to a new site starts fresh instead of showing stale values.
       if (currentHostname && storedHostname && currentHostname === storedHostname) {
         dispatch({
           type: 'PREFILL_LOADED',
@@ -942,7 +971,9 @@ export default function App() {
   }, []);
 
   const handleScan = () => {
-    startScan(dispatch);
+    // Pass current settings so startScan can forward minDimension to the content script
+    // and apply skipGifs filtering on scan results before dispatching them to state.
+    startScan(dispatch, state.settings);
   };
 
   const handleToggle = (url: string) => {

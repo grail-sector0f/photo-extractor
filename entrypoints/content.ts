@@ -22,6 +22,7 @@ import { extractImgTags } from '@/lib/extract/imgTags';
 import { extractCssBackgrounds } from '@/lib/extract/cssBackgrounds';
 import { parseSrcset } from '@/lib/extract/srcsetParser';
 import type { ImageResult } from '@/lib/extract/types';
+import { DEFAULT_SETTINGS } from '@/lib/settings';
 
 // --- processImg ---
 //
@@ -37,16 +38,18 @@ import type { ImageResult } from '@/lib/extract/types';
 //
 // Returns null if the image is filtered out or a duplicate.
 // Returns an ImageResult with the resolved URL and dimensions if it passes.
-export function processImg(img: HTMLImageElement, seenUrls: Set<string>): ImageResult | null {
-  const MIN_DIMENSION = 100;
-
+export function processImg(
+  img: HTMLImageElement,
+  seenUrls: Set<string>,
+  minDimension: number = DEFAULT_SETTINGS.minDimension,
+): ImageResult | null {
   // --- Dimension check ---
   // Use naturalWidth/naturalHeight when the image has finished loading.
   // Fall back to img.width/img.height (rendered CSS size) if still loading.
   const w = (img.complete && img.naturalWidth > 0) ? img.naturalWidth : img.width;
   const h = (img.complete && img.naturalWidth > 0) ? img.naturalHeight : img.height;
 
-  if (w < MIN_DIMENSION || h < MIN_DIMENSION) {
+  if (w < minDimension || h < minDimension) {
     return null;
   }
 
@@ -127,12 +130,16 @@ export function handleScanSession(port: chrome.runtime.Port): void {
   let observer: MutationObserver | null = null;
 
   port.onMessage.addListener((msg: unknown) => {
-    const message = msg as { type: string };
+    const message = msg as { type: string; minDimension?: number };
     if (message.type !== 'SCAN_PAGE') return;
+
+    // Read minDimension from the SCAN_PAGE message, falling back to the default.
+    // The popup passes settings.minDimension so users can configure the threshold.
+    const minDim = message.minDimension ?? DEFAULT_SETTINGS.minDimension;
 
     // --- Initial scan ---
     // Run both extractors and merge results into one deduplicated list
-    const imgResults = extractImgTags();
+    const imgResults = extractImgTags(minDim);
     const cssResults = extractCssBackgrounds();
     const allResults = [...imgResults, ...cssResults];
 
@@ -177,7 +184,8 @@ export function handleScanSession(port: chrome.runtime.Port): void {
 
             // Check if the added node itself is an img
             if (el.tagName === 'IMG') {
-              const result = processImg(el as HTMLImageElement, seenUrls);
+              // Pass minDim captured in closure from SCAN_PAGE message
+              const result = processImg(el as HTMLImageElement, seenUrls, minDim);
               if (result) {
                 port.postMessage({ type: 'IMAGE_FOUND', payload: result });
               }
@@ -186,7 +194,7 @@ export function handleScanSession(port: chrome.runtime.Port): void {
             // Check for img descendants in newly added subtrees
             // (e.g., a card component added to DOM that contains multiple images)
             el.querySelectorAll<HTMLImageElement>('img').forEach((img) => {
-              const result = processImg(img, seenUrls);
+              const result = processImg(img, seenUrls, minDim);
               if (result) {
                 port.postMessage({ type: 'IMAGE_FOUND', payload: result });
               }
@@ -199,7 +207,7 @@ export function handleScanSession(port: chrome.runtime.Port): void {
           // (lazy loaders often set src="" initially and then update it after scroll)
           const el = mutation.target as HTMLElement;
           if (el.tagName === 'IMG') {
-            const result = processImg(el as HTMLImageElement, seenUrls);
+            const result = processImg(el as HTMLImageElement, seenUrls, minDim);
             if (result) {
               port.postMessage({ type: 'IMAGE_FOUND', payload: result });
             }
