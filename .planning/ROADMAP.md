@@ -145,10 +145,10 @@ Plans:
   5. Settings panel accessible via gear icon in popup header, with back navigation
   6. Settings persist across popup close/reopen cycles
   7. Content script uses configurable minDimension from scan message (no hardcoded constants)
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 999.2-01-PLAN.md — Create settings module with storage helpers, wire into content script scan and popup download pipeline
+- [x] 999.2-01-PLAN.md — Create settings module with storage helpers, wire into content script scan and popup download pipeline
 - [ ] 999.2-02-PLAN.md — Build settings UI panel with preset buttons, toggles, gear icon navigation, and visual verification
 
 ### Phase 999.3: Library view — sort saved photos by meta tags (BACKLOG)

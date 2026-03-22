@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 999.1-03-PLAN.md
-last_updated: "2026-03-22T02:47:57.906Z"
+stopped_at: Completed 999.2-01-PLAN.md
+last_updated: "2026-03-22T03:39:48.306Z"
 progress:
   total_phases: 8
   completed_phases: 6
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 16
+  completed_plans: 15
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Jennifer can grab any photo she sees while browsing travel sites and have it saved, named, and ready to drop into a tern.travel itinerary without friction.
-**Current focus:** Phase 999.1 — ui-modernization-year-field
+**Current focus:** Phase 999.2 — settings-view-image-quality-control-minimum-resolution-filtering
 
 ## Current Position
 
-Phase: 999.2
-Plan: Not started
+Phase: 999.2 (settings-view-image-quality-control-minimum-resolution-filtering) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Plan: Not started
 | Phase 999.1 P01 | 5 | 1 tasks | 2 files |
 | Phase 999.1 P02 | 2 | 2 tasks | 4 files |
 | Phase 999.1 P03 | 25 | 2 tasks | 1 files |
+| Phase 999.2 P01 | 4 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,10 @@ Recent decisions affecting current work:
 - [Phase 999.1]: Google Fonts CSS API used to discover current WOFF2 URLs (v15 static URLs were 404; v20 URLs fetched dynamically)
 - [Phase 999.1]: Variable weight range (400 800) used in @font-face — one WOFF2 file covers all weights for each family
 - [Phase 999.1]: Camera icon bumped to w-8 h-8 (32px) for header visibility; gallery grid capped at 210px max-height; added 'restricted' ScanStatus with URL scheme check for blank-tab guard
+- [Phase 999.2-01]: DEFAULT_SETTINGS values: minDimension=150 (Medium), skipGifs=false, cdnUpscalingEnabled=true (per user decisions)
+- [Phase 999.2-01]: MIN_DIMENSION_PRESETS are preset buttons (Small/50, Medium/150, Large/300), not a slider
+- [Phase 999.2-01]: GIF filter applied in port.onMessage callback outside reducer to keep reducer pure
+- [Phase 999.2-01]: Settings loaded alongside prefill in single mount useEffect — one chrome.storage.local.get call instead of two
 
 ### Roadmap Evolution
 
@@ -128,6 +133,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T20:36:28.932Z
-Stopped at: Completed 999.1-03-PLAN.md
+Last session: 2026-03-22T03:39:48.304Z
+Stopped at: Completed 999.2-01-PLAN.md
 Resume file: None
